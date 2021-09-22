@@ -6,9 +6,14 @@ A simple/toy x86 operating system built while learning operating system concepts
 
 TODO:
 
+## Development
+
+See [docs/dev-setup.md](docs/dev-setup.md)
+
 ## References
 
 - [BrokenThorn OS Development Series](http://www.brokenthorn.com/Resources/)
 - [The Little Book About OS Development](https://littleosbook.github.io/)
+- [BIOS Interrupt Calls](https://en.wikipedia.org/wiki/BIOS_interrupt_call)
 - [OSDev.org](https://wiki.osdev.org/Main_Page)
-- [BIOS Interrupt Call Wiki](https://en.wikipedia.org/wiki/BIOS_interrupt_call)
+  - [Rolling Your Own Bootloader](https://wiki.osdev.org/Rolling_Your_Own_Bootloader)
