@@ -32,7 +32,7 @@ Also, its just the steps on https://wiki.osdev.org/GCC_Cross-Compiler
 
 ### Verify Install and Add to Path
 
-- Verify install - `$HOME/opt/cross/bin/$TARGET-gcc --version`
+- Verify install - `$HOME/opt/cross/bin/i686-elf-gcc --version`
 - permanent - `sudo nano ~/.bashrc`
   - add line at bottom - `export PATH="$HOME/opt/cross/bin:$PATH"`
 - Reboot
