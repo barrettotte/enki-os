@@ -10,6 +10,9 @@ TODO:
 
 See [docs/dev-setup.md](docs/dev-setup.md)
 
+- Boot directly - `make build && make qemu`
+- Boot from ISO - `make build_iso && make qemu_iso`
+
 ## References
 
 - [BrokenThorn OS Development Series](http://www.brokenthorn.com/Resources/)
