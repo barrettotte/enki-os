@@ -1,14 +1,18 @@
 # Build enki-os
 
-ISO = myos.iso
 BIN = myos.bin
-BOOT_DIR = boot
+ISO = myos.iso
+ISO_DIR = iso
+
 LINKER = linker.ld
 CROSS = ${HOME}/opt/cross
 
 AS = $(CROSS)/bin/i686-elf-as
 GCC = $(CROSS)/bin/i686-elf-gcc
 QEMU = qemu-system-i386
+
+CFLAGS ?= -O2 -g
+CFLAGS := $(CFLAGS) -Wall -Wextra
 
 all: 		rebuild
 
@@ -19,14 +23,14 @@ setup:
 
 build:
 			$(AS) boot.s -o boot.o
-			$(GCC) -c kernel.c -o kernel.o -std=gnu99 -ffreestanding -O2 -Wall -Wextra
-			$(GCC) -T $(LINKER) -o $(BIN) -ffreestanding -O2 -nostdlib boot.o kernel.o -lgcc
+			$(GCC) -c kernel.c -o kernel.o -std=gnu99 -ffreestanding $(CFLAGS)
+			$(GCC) -T $(LINKER) -o $(BIN) -ffreestanding $(CFLAGS) -nostdlib boot.o kernel.o -lgcc
 
 build_iso:	build
-			@mkdir -p $(BOOT_DIR)/grub
-			cp $(BIN) $(BOOT_DIR)/$(BIN)
-			cp grub.cfg $(BOOT_DIR)/grub/grub.cfg
-			grub-mkrescue -o $(ISO) $(BOOT_DIR)
+			@mkdir -p $(ISO_DIR)/grub
+			cp $(BIN) $(ISO_DIR)/$(BIN)
+			cp grub.cfg $(ISO_DIR)/grub/grub.cfg
+			grub-mkrescue -o $(ISO) $(ISO_DIR)
 
 qemu:
 			$(QEMU) -kernel $(BIN)
@@ -36,4 +40,4 @@ qemu_iso:
 
 clean:
 			rm -f ./*.o $(ISO) $(BIN)
-			rm -rf $(BOOT_DIR)
+			rm -rf $(ISO_DIR)

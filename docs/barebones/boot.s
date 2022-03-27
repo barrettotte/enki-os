@@ -1,5 +1,3 @@
-/* $HOME/opt/cross/bin/i686-elf-as boot.s -o boot.o */
-
 /* Declare constants for the multiboot header. */
 
 .set ALIGN,    1<<0             /* align loaded modules on page boundaries */

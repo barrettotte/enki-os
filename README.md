@@ -2,9 +2,13 @@
 
 A simple/toy x86 operating system built while learning operating system concepts.
 
+TODO: add picture of Enki with link to wiki
+
 ## Features
 
 TODO:
+
+Held off at `crti.s`
 
 ## Development
 
@@ -15,8 +19,9 @@ See [docs/dev-setup.md](docs/dev-setup.md)
 
 ## References
 
-- [BrokenThorn OS Development Series](http://www.brokenthorn.com/Resources/)
-- [The Little Book About OS Development](https://littleosbook.github.io/)
-- [BIOS Interrupt Calls](https://en.wikipedia.org/wiki/BIOS_interrupt_call)
+- Bootloader
+  - [BIOS Interrupt Calls](https://en.wikipedia.org/wiki/BIOS_interrupt_call)
+  - [OSDev: Rolling Your Own Bootloader](https://wiki.osdev.org/Rolling_Your_Own_Bootloader)
+  - [Carnegie Mellon CS: Writing a Bootloader from Scratch](https://www.cs.cmu.edu/~410-s07/p4/p4-boot.pdf)
 - [OSDev.org](https://wiki.osdev.org/Main_Page)
-  - [Rolling Your Own Bootloader](https://wiki.osdev.org/Rolling_Your_Own_Bootloader)
+- [BrokenThorn OS Dev](http://www.brokenthorn.com/Resources/OSDevIndex.html)

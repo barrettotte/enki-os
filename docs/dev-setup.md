@@ -36,3 +36,7 @@ Also, its just the steps on https://wiki.osdev.org/GCC_Cross-Compiler
 - permanent - `sudo nano ~/.bashrc`
   - add line at bottom - `export PATH="$HOME/opt/cross/bin:$PATH"`
 - Reboot
+
+## Misc
+
+- `sudo apt install xorriso grub-pc-bin` - for creating ISO files
