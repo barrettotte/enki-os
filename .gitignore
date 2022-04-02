@@ -1,7 +1,15 @@
 *.o
 *.bin
+*.flp
+*.img
 *.iso
 
-barebones/boot
+*.log
+
+bin/
+build/
+out/
+
+docs/barebones/boot
 
 .vscode/*
