@@ -31,22 +31,24 @@ TODO: add picture of Enki with link to wiki
 
 TODO:
 
-Held off at `crti.s`
-
 ## Development
 
-See [docs/dev-setup.md](docs/dev-setup.md)
+```sh
+# burn to USB
+sudo fdisk -l                     # find USB disk
+sudo dd if=boot.bin of=/dev/sdb   # overwrite USB's first sector with our bootloader
+```
 
 ## References
 
 - Bootloader
   - [BIOS Interrupt Calls](https://en.wikipedia.org/wiki/BIOS_interrupt_call)
   - [OSDev: Rolling Your Own Bootloader](https://wiki.osdev.org/Rolling_Your_Own_Bootloader)
-  - [Carnegie Mellon CS: Writing a Bootloader from Scratch](https://www.cs.cmu.edu/~410-s07/p4/p4-boot.pdf)
   - [BIOS Parameter Block](https://wiki.osdev.org/FAT#BPB_.28BIOS_Parameter_Block.29)
   - [Interrupt Vector Table](https://wiki.osdev.org/Interrupt_Vector_Table)
   - [Cylinder-head-sector](https://en.wikipedia.org/wiki/Cylinder-head-sector)
   - [Logical block addressing](https://en.wikipedia.org/wiki/Logical_block_addressing)
+  - [Global Descriptor Table](https://wiki.osdev.org/Global_Descriptor_Table)
   - [A20 Line](https://wiki.osdev.org/A20_Line)
 - [OSDev.org](https://wiki.osdev.org/Main_Page)
 - [BrokenThorn OS Dev](http://www.brokenthorn.com/Resources/OSDevIndex.html)
