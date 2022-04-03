@@ -1,13 +1,39 @@
-# TODO: add rules
+# Build Enki OS
 
-all:
-	nasm -f bin src/boot/boot.asm -o bin/boot.bin
+OS   := enki
+ARCH := x86_64
+
+BIN   := bin
+BUILD := build
+OUT   := out
+SRC   := src
+BOOT  := $(SRC)/boot
+
+AS   := nasm
+QEMU := qemu-system-$(ARCH)
+QEMU_FLAGS := -drive file=$(BIN)/boot.bin,format=raw \
+		      -d guest_errors -D $(OUT)/error.log
+
+.PHONY:		.FORCE
+.FORCE:
+
+all:		build
+
+build:		clean boot
 	
-qemu:
-	qemu-system-x86_64 -hda bin/boot.bin
+boot:
+			$(AS) -f bin $(BOOT)/boot.asm -o $(BIN)/boot.bin
 
-debug:
-	gdb -ex 'target remote | qemu-system-x86_64 -hda bin/boot.bin -S -gdb stdio'
+qemu:		build
+			$(QEMU) $(QEMU_FLAGS)
+
+debug:		build
+			gdb -ex 'target remote | $(QEMU) $(QEMU_FLAGS) -S -gdb stdio'
 
 clean:
-	rm -rf bin/*.bin
+			rm -rf $(BIN)/*.bin
+			rm -rf $(OUT)/*
+
+toolchain:
+			chmod +x scripts/toolchain.sh
+			sudo scripts/toolchain.sh $(ARCH)
