@@ -1,31 +1,25 @@
 #!/bin/bash
 # setup cross compiler for Enki OS
+#
+# Invoke with: make toolchain
 
-ARCH=$1
+# env
+ARCH=i686
+export PREFIX="$HOME/opt/cross"
+export TARGET=$ARCH-elf
+export PATH="$PREFIX:$PATH"
 
 BINUTILS_V=2.38
 GCC_V=11.2.0
 
-# check args
-if [ $# -eq 0 ]; then
-    echo "Usage: toolchain [ARCH]"
-    exit
-fi
-
-# set env
-export PREFIX="$HOME/opt/cross"
-export TARGET=$ARCH-elf
-export PATH="$PREFIX/bin:$PATH"
-
 # init directories
 sudo mkdir -p $PREFIX
+rm -rf /tmp/src/
 mkdir -p /tmp/src
-rm -rf /tmp/src/*
 
 # install dependencies
 sudo apt install -y build-essential bison flex libgmp3-dev libmpc-dev \
 	libmpfr-dev texinfo libisl-dev
-exit
 
 # fetch/init binutils
 wget https://ftp.gnu.org/gnu/binutils/binutils-$BINUTILS_V.tar.xz -P /tmp/src
@@ -36,8 +30,7 @@ cd /tmp/src/build-binutils
 	--with-sysroot --disable-nls --disable-werror
 
 # build binutils
-make
-make install
+sudo make all install
 
 # verify binutils installed
 which -- $TARGET-as || exit
@@ -53,8 +46,8 @@ cd /tmp/src/build-gcc
 # build gcc
 make all-gcc
 make all-target-libgcc
-make install-gcc
-make install-target-libgcc
+sudo make install-gcc
+sudo make install-target-libgcc
 
 # verify gcc installed
 $PREFIX/bin/$TARGET-gcc --version || exit
