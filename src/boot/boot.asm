@@ -1,8 +1,8 @@
-; Bootloader
+; Enki OS Bootloader
 ;
 ; TODO: summary
 ;
-        org 0x7C00                          ; 
+        org 0x7C00                          ; BIOS puts us here
         bits 16                             ; real mode
 
         CODE_SEG equ gdt_code - gdt_start   ; protected mode code segment
@@ -34,6 +34,7 @@ main:                                       ; ***** main *****
         or eax, 0x1                         ;
         mov cr0, eax                        ;
         jmp CODE_SEG:load_32                ; enter protected mode
+        jmp $
 
 print_str:                                  ; ***** print string to terminal *****
                                             ; in SI - pointer to string
@@ -86,18 +87,56 @@ gdt_descriptor:                             ;
 
         bits 32                             ; ***** protected mode *****
 load_32:                                    ;
-        mov ax, DATA_SEG                    ;
-        mov ds, ax                          ; init data segment
-        mov es, ax                          ; init extra segment
-        mov fs, ax                          ; init extra segment
-        mov gs, ax                          ; init extra segment
-        mov ss, ax                          ; init stack segment
-        mov ebp, 0x00200000                 ; init base pointer
-        mov esp, ebp                        ; init stack pointer
+        mov eax, 1                          ; start sector (skip 0=bootloader)
+        mov ecx, 100                        ; sectors of kernel   TODO: constant?
+        mov edi, 0x0100000                  ; kernel entry        TODO: constant?
+        call ata_lba_read                   ; read kernel from hard disk
+        jmp CODE_SEG:0x0100000              ; jump into kernel    TODO: constant?
 
-        in al, 0x92                         ; read from port
-        or al, 2                            ; enable A20 line - NOTE: could fail depending on system...
-        out 0x92, al                        ; write to port
+ata_lba_read:                               ; ***** ATA LBA Read *****
+        mov ebx, eax                        ; save LBA
+        shr eax, 24                         ; highest byte
+        or eax, 0xE0                        ; select master drive
+        mov dx, 0x1F6                       ; hard disk controller port
+        out dx, al                          ; send byte
+
+        mov eax, ecx                        ; total sectors
+        mov dx, 0x1F2                       ;
+        out dx, al                          ;
+
+        mov eax, ebx                        ; restore LBA
+        mov dx, 0x1F3                       ;
+        out dx, al                          ;
+
+        mov dx, 0x1F4                       ;
+        mov eax, ebx                        ; restore LBA
+        shr eax, 8                          ; 
+        out dx, al                          ;
+
+        mov dx, 0x1F5                       ;
+        mov eax, ebx                        ;
+        shr eax, 16                         ; upper 16-bits
+
+        mov dx, 0x1F7                       ;
+        mov al, 0x20                        ;
+        out dx, al                          ;
+
+.next_sector:                               ;
+        push ecx                            ; stash sector_count
+.try_read:                                  ;
+        mov dx, 0x1F7                       ; 
+        in al, dx                           ; 
+        test al, 8                          ; check if read was successful
+        jz .try_read                        ; repeat read until success
+
+        mov ecx, 256                        ; amount of words to read
+        mov dx, 0x1F0                       ; IO port to read from
+        rep insw                            ; read 256 words from IO port (DX) starting at ES:EDI
+
+        pop ecx                             ; restore sector_count
+        loop .next_sector                   ; while (sector_count < total_sectors)
+        ret                                 ; end of ata_lba_read subroutine
+
 .end:                                       ;
         jmp $                               ; hang
                                             ; ***** complete boot sector *****
