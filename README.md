@@ -4,7 +4,32 @@ A simple/toy x86 operating system built while learning operating system concepts
 
 TODO: add picture of Enki with link to wiki
 
-## Summary
+## Features
+
+TODO:
+
+## Building Locally
+
+- Install dependencies and build cross compiler: `make toolchain`
+- Build OS image: `make`
+- Build OS image and launch in QEMU `make qemu`
+
+## Development
+
+Debug via GDB and QEMU with `make debug`
+
+```sh
+# burn to USB
+sudo fdisk -l                     # find USB disk
+sudo dd if=boot.bin of=/dev/sdb   # overwrite USB's first sector with our bootloader
+```
+
+## TODO Items
+
+- TODO: can I make a docker image for OS development ?
+- TODO: use `#pragma once` instead of `ifndef` guard?
+
+## OS Startup
 
 - User presses power button
   - motherboard routes "on" signal to power supply
@@ -16,28 +41,9 @@ TODO: add picture of Enki with link to wiki
   - creates interrupt vector table (IVT) and does more hardware tests
   - tries to find bootloader; searches all storage mediums for boot signature `0x55AA`
   - loads bootloader into RAM at `0x7C00` and absolute jumps to this location
-- **Bootloader stage 1**
+- **Bootloader**
   - limited to 512 bytes
-  - load bootloader stage 2 from boot drive (FAT12 floppy) to memory
-  - transfer control to stage 2 via BIOS interrupts
-- **Bootloader stage 2**; at `0x500`
-  - TODO: enable address line 20 (A20)
-  - TODO: install GDT and IDT
-  - TODO: load kernel in memory
-  - TODO: switch to protected mode
-  - TODO: transfer control to kernel
-
-## Features
-
-TODO:
-
-## Development
-
-```sh
-# burn to USB
-sudo fdisk -l                     # find USB disk
-sudo dd if=boot.bin of=/dev/sdb   # overwrite USB's first sector with our bootloader
-```
+  - TODO:
 
 ## References
 
@@ -50,5 +56,7 @@ sudo dd if=boot.bin of=/dev/sdb   # overwrite USB's first sector with our bootlo
   - [Logical block addressing](https://en.wikipedia.org/wiki/Logical_block_addressing)
   - [Global Descriptor Table](https://wiki.osdev.org/Global_Descriptor_Table)
   - [A20 Line](https://wiki.osdev.org/A20_Line)
+- Kernel
+  - [Interrupt Descriptor Table](https://wiki.osdev.org/Interrupt_Descriptor_Table)
 - [OSDev.org](https://wiki.osdev.org/Main_Page)
 - [BrokenThorn OS Dev](http://www.brokenthorn.com/Resources/OSDevIndex.html)

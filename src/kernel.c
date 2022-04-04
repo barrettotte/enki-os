@@ -36,7 +36,7 @@ void tty_writechar(char c, char color) {
 
 // initialize terminal
 void tty_init() {
-    video_mem = (uint16_t*)(0xB8000);
+    video_mem = (uint16_t*)(0xB8000);  // TODO: const?
     tty_row = 0;
     tty_col = 0;
 

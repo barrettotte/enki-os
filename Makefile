@@ -21,19 +21,18 @@ GCC_INCLUDES := -I src/
 GCC_FLAGS := -g -ffreestanding \
 			 -falign-jumps -falign-functions -falign-labels -falign-loops \
 			 -fstrength-reduce -fomit-frame-pointer -finline-functions -fno-builtin \
-			 -Wno-unused-function -Werror -Wno-unused-label -Wno-cpp -Wno-unused-parameter \
-			 -nostdlib -nostartfiles -nodefaultlibs -Wall -O0 -Iinc
+			 -Werror -Wno-unused-function -Wno-unused-label -Wno-cpp -Wno-unused-parameter \
+			 -nostdlib -nostartfiles -nodefaultlibs \
+			 -Wall -O0 -Iinc
 
 OBJECTS := $(BUILD)/kernel.asm.o $(BUILD)/kernel.o
 
 .PHONY:			.FORCE
 .FORCE:
 
-all:			build_img
+all:			build
 
-build_img:      clean build_kernel link os_img
-
-build:			clean build_kernel
+build:          clean build_kernel link os_img
 
 build_boot:
 				$(AS) -f bin $(SRC)/boot/boot.asm -o $(BIN)/boot.bin

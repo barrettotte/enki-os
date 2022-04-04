@@ -26,4 +26,4 @@ _start:                                     ;
 .end:                                       ;
         jmp $                               ; hang
 
-        times 512 - ($ - $$) db 0x0         ; pad rest of sector
+        times 512 - ($ - $$) db 0x0         ; pad rest of sector (16-bit align too)
