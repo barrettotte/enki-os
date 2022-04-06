@@ -28,22 +28,7 @@ sudo dd if=boot.bin of=/dev/sdb   # overwrite USB's first sector with our bootlo
 
 - TODO: can I make a docker image for OS development ?
 - TODO: use `#pragma once` instead of `ifndef` guard?
-
-## OS Startup
-
-- User presses power button
-  - motherboard routes "on" signal to power supply
-  - power supply supplies power to the rest of the system
-  - power supply routes "power good" signal to motherboard
-- CPU executes **BIOS** (Basic Input/Output System) directly from ROM
-  - BIOS loads itself into RAM, then continues execution from RAM
-  - initiates POST (Power On Self Test); runs power, device, and memory tests
-  - creates interrupt vector table (IVT) and does more hardware tests
-  - tries to find bootloader; searches all storage mediums for boot signature `0x55AA`
-  - loads bootloader into RAM at `0x7C00` and absolute jumps to this location
-- **Bootloader**
-  - limited to 512 bytes
-  - TODO:
+- TODO: consider use embedded asm in C instead of the separate asm files?
 
 ## References
 
@@ -60,3 +45,4 @@ sudo dd if=boot.bin of=/dev/sdb   # overwrite USB's first sector with our bootlo
   - [Interrupt Descriptor Table](https://wiki.osdev.org/Interrupt_Descriptor_Table)
 - [OSDev.org](https://wiki.osdev.org/Main_Page)
 - [BrokenThorn OS Dev](http://www.brokenthorn.com/Resources/OSDevIndex.html)
+- [x86 and amd64 instruction set](https://www.felixcloutier.com/x86/)

@@ -1,5 +1,6 @@
 #include "kernel.h"
 #include "idt/idt.h"
+#include "io/io.h"
 
 #include <stddef.h>
 #include <stdint.h>
@@ -64,8 +65,6 @@ void print(const char* s) {
     }
 }
 
-extern void test_div0();
-
 // kernel entry
 void kernel_main() {
     tty_init();
@@ -74,5 +73,5 @@ void kernel_main() {
 
     idt_init();
 
-    test_div0();  // test div by zero interrupt
+    enable_interrupts();
 }

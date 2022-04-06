@@ -11,11 +11,11 @@ SRC_DIR := src
 TARGET  := $(BIN_DIR)/kernel.bin
 HEADERS := $(shell find $(SRC_DIR)/* -type f -iname "*.h")
 
-SRC_EXCL   := -not \( -path $(SRC_DIR)/boot/* -o -path $(SRC_DIR)/kernel.asm \)
-SRC_TYPES  := -type f \( -iname "*.asm" -o -iname "*.c" -o -iname "*.cpp" \)
-SOURCES    := $(shell find $(SRC_DIR)/* $(SRC_EXCL) $(SRC_TYPES))
-OBJECTS    := $(foreach OBJECT, $(patsubst %.asm, %.asm.o, $(patsubst %.c, %.o, $(patsubst %.cpp, %.o, $(SOURCES)))), $(OBJ_DIR)/$(OBJECT))
-KERNEL_OBJ := $(OBJ_DIR)/kernel_full.o
+SRC_EXCL    := -not \( -path $(SRC_DIR)/boot/* -o -path $(SRC_DIR)/kernel.asm \)
+SRC_TYPES   := -type f \( -iname "*.asm" -o -iname "*.c" -o -iname "*.cpp" \)
+SOURCES     := $(shell find $(SRC_DIR)/* $(SRC_EXCL) $(SRC_TYPES))
+OBJECTS     := $(foreach OBJECT, $(patsubst %.asm, %.asm.o, $(patsubst %.c, %.o, $(patsubst %.cpp, %.o, $(SOURCES)))), $(OBJ_DIR)/$(OBJECT))
+KERNEL_FULL := $(OBJ_DIR)/kernel_full.o
 
 CROSS := "$(HOME)/opt/cross/bin/$(ARCH)-$(FMT)"
 
@@ -48,8 +48,9 @@ $(TARGET): $(OBJECTS)
 	$(AS) -f bin $(SRC_DIR)/boot/boot.asm -o $(BIN_DIR)/boot.bin
 	$(AS) $(AS_FLAGS) $(SRC_DIR)/kernel.asm -o $(OBJ_DIR)/kernel.asm.o
 	@echo "linking..."
-	$(LD) $(LD_FLAGS) $(OBJ_DIR)/kernel.asm.o $+ -o $(KERNEL_OBJ)
-	$(CC) $(CC_FLAGS) -T $(SRC_DIR)/linker.ld -o $@ -ffreestanding -O0 -nostdlib $(KERNEL_OBJ)
+	@echo "objects: $+"
+	$(LD) $(LD_FLAGS) $(OBJ_DIR)/kernel.asm.o $+ -o $(KERNEL_FULL)
+	$(CC) $(CC_FLAGS) -T $(SRC_DIR)/linker.ld -o $@ -ffreestanding -O0 -nostdlib $(KERNEL_FULL)
 
 $(OBJ_DIR)/%.asm.o: %.asm
 	@mkdir -p $(@D)
@@ -84,7 +85,7 @@ qemu:	build
 
 debug:	build
 	@gdb -ex 'set confirm off' \
-		-ex 'add-symbol-file $(KERNEL_OBJ) 0x100000' \
+		-ex 'add-symbol-file $(KERNEL_FULL) 0x100000' \
 		-ex 'break kernel_main' \
 		-ex 'target remote | $(QEMU) $(QEMU_FLAGS) -S -gdb stdio'
 
