@@ -64,11 +64,15 @@ void print(const char* s) {
     }
 }
 
+extern void test_div0();
+
 // kernel entry
 void kernel_main() {
     tty_init();
     print("Welcome to Enki OS\n");
-    print("\n\nHello world");
+    print("\n\nHello world\n");
 
     idt_init();
+
+    test_div0();  // test div by zero interrupt
 }

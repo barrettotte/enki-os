@@ -6,7 +6,7 @@
 struct idt_entry idt_entries[ENKIOS_TOTAL_INTERRUPTS];
 struct idtr_ptr idtr;
 
-// extern void idt_load(struct idtr_ptr* ptr);
+extern void idt_load(struct idtr_ptr* ptr);
 
 void idt_zero() {
     print("Divide by zero error\n");
@@ -31,5 +31,5 @@ void idt_init() {
     // set interrupts
     idt_set(0x0, idt_zero);
 
-    // idt_load(&idtr);
+    idt_load(&idtr);
 }

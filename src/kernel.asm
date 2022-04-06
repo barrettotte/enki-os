@@ -4,6 +4,8 @@
 ;
         bits 32                             ; protected mode
         global _start                       ; export symbol
+        global test_div0                    ;
+
         extern kernel_main                  ;
 
         CODE_SEG equ 0x08                   ; kernel code segment
@@ -25,5 +27,9 @@ _start:                                     ;
         call kernel_main                    ; enter kernel
 .end:                                       ;
         jmp $                               ; hang
+
+test_div0:
+        mov eax, 0
+        div eax
 
         times 512 - ($ - $$) db 0x0         ; pad rest of sector (16-bit align too)

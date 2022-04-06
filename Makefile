@@ -11,8 +11,10 @@ SRC_DIR  := src
 TARGET  := $(BIN_DIR)/kernel.bin
 HEADERS := $(shell find $(SRC_DIR)/* -type f -iname "*.h")
 
-SRC_ASM := $(shell find $(SRC_DIR)/* -not \( -path $(SRC_DIR)/boot/* -o -path $(SRC_DIR)/kernel.asm \) -type -iname "*.asm")
-SOURCES := $(SRC_ASM) $(shell find $(SRC_DIR)/* -type f \( -iname "*.c" -o -iname "*.cpp" \) )
+SRC_EXCLUDE := -not \( -path $(SRC_DIR)/boot/* -o -path $(SRC_DIR)/kernel.asm \)
+SRC_TYPES   := -type f \( -iname "*.asm" -o -iname "*.c" -o -iname "*.cpp" \)
+
+SOURCES := $(shell find $(SRC_DIR)/* $(SRC_EXCLUDE) $(SRC_TYPES))
 OBJECTS := $(foreach OBJECT, $(patsubst %.asm, %.asm.o, $(patsubst %.c, %.o, $(patsubst %.cpp, %.o, $(SOURCES)))), $(OBJ_DIR)/$(OBJECT))
 
 PREFIX := "$(HOME)/opt/cross/bin"
@@ -46,6 +48,7 @@ $(TARGET): $(OBJECTS)
 	mkdir -p $(@D)
 	$(AS) -f bin $(SRC_DIR)/boot/boot.asm -o $(BIN_DIR)/boot.bin
 	$(AS) $(AS_FLAGS) $(SRC_DIR)/kernel.asm -o $(OBJ_DIR)/kernel.asm.o
+	echo ">>> link order: $+"
 	$(LD) $(LD_FLAGS) $(OBJ_DIR)/kernel.asm.o $+ -o $(KERNEL_OBJ)
 	$(CC) $(CC_FLAGS) -T $(SRC_DIR)/linker.ld -o $@ -ffreestanding -O0 -nostdlib $(KERNEL_OBJ)
 
