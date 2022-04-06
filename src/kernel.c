@@ -1,4 +1,5 @@
 #include "kernel.h"
+#include "idt/idt.h"
 
 #include <stddef.h>
 #include <stdint.h>
@@ -56,10 +57,10 @@ size_t strlen(const char* str) {
     return len;
 }
 
-void print(const char* str) {
-    size_t len = strlen(str);
+void print(const char* s) {
+    size_t len = strlen(s);
     for (int i = 0; i < len; i++) {
-        tty_writechar(str[i], 15);
+        tty_writechar(s[i], 15);
     }
 }
 
@@ -68,4 +69,6 @@ void kernel_main() {
     tty_init();
     print("Welcome to Enki OS\n");
     print("\n\nHello world");
+
+    idt_init();
 }
