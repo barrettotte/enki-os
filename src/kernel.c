@@ -2,6 +2,7 @@
 #include "idt/idt.h"
 #include "io/io.h"
 #include "memory/heap/kheap.h"
+#include "memory/paging/paging.h"
 
 #include <stddef.h>
 #include <stdint.h>
@@ -65,28 +66,39 @@ void print(const char* s) {
     }
 }
 
-// kernel entry
+static struct paging_4gb_chunk* kernel_chunk = 0;
+
 void kernel_main() {
+    int status = 0;
+
     tty_init();
     print("Welcome to Enki OS\n");
     print("\n\nHello world\n");
 
     kheap_init();
-
     idt_init();
 
-    // test kmalloc/kfree
+    // enable paging
+    uint8_t paging_flags = PAGING_IS_WRITEABLE | PAGING_IS_PRESENT | PAGING_ACCESS_FROM_ALL;
+    kernel_chunk = paging_new_4gb(paging_flags);
+    paging_switch(paging_4gb_chunk_get_directory(kernel_chunk));
 
-    void* ptr = kmalloc(50);     // 0x1000000
-    void* ptr2 = kmalloc(5000);  // 0x1001000
-    void* ptr3 = kmalloc(5600);  // 0x1003000
-
-    kfree(ptr);
-    void* ptr4 = kmalloc(50);    // 0x1000000
-
-    if (ptr || ptr2 || ptr3 || ptr4) {
-        // suppress compiler error
+    // test page set
+    char* ptr = kzalloc(4096);
+    status = paging_set(paging_4gb_chunk_get_directory(kernel_chunk), (void*)0x1000, (uint32_t)ptr | PAGING_IS_WRITEABLE | PAGING_IS_PRESENT | PAGING_ACCESS_FROM_ALL);
+    if (status != 0) {
+        print("page set test failed\n");
     }
 
-    // enable_interrupts();
+    enable_paging();
+
+    char* ptr2 = (char*) 0x1000;
+    ptr2[0] = 'A';
+    ptr2[1] = 'B';
+    
+    print(ptr2);
+    print("?");
+    print(ptr);
+    
+    enable_interrupts();
 }

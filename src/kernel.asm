@@ -1,8 +1,5 @@
-; Enki OS kernel
-;
-; TODO: summary
-;
         bits 32                             ; protected mode
+
         global _start                       ; export symbol
         global test_div0                    ; TODO: remove
 

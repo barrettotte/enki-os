@@ -4,8 +4,10 @@
 #define VGA_WIDTH 80
 #define VGA_HEIGHT 20
 
+// kernel entry
 void kernel_main();
 
+// print string to terminal
 void print(const char* s);
 
 #endif

@@ -1,4 +1,5 @@
-        section .asm
+        bits 32                             ; protected mode
+        section .asm                        ;
 
         global inpb                         ;
         global inpw                         ;

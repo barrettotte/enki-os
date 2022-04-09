@@ -1,4 +1,5 @@
-        section .asm
+        bits 32                             ; protected mode
+        section .asm                        ;
         
         global enable_interrupts            ;
         global disable_interrupts           ;
