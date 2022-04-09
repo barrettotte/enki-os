@@ -1,6 +1,7 @@
 #include "kernel.h"
 #include "idt/idt.h"
 #include "io/io.h"
+#include "memory/heap/kheap.h"
 
 #include <stddef.h>
 #include <stdint.h>
@@ -26,7 +27,6 @@ void tty_writechar(char c, char color) {
         tty_col = 0;
         return;
     }
-
     tty_putchar(tty_col, tty_row, c, color);
     tty_col++;
 
@@ -71,7 +71,22 @@ void kernel_main() {
     print("Welcome to Enki OS\n");
     print("\n\nHello world\n");
 
+    kheap_init();
+
     idt_init();
 
-    enable_interrupts();
+    // test kmalloc/kfree
+
+    void* ptr = kmalloc(50);     // 0x1000000
+    void* ptr2 = kmalloc(5000);  // 0x1001000
+    void* ptr3 = kmalloc(5600);  // 0x1003000
+
+    kfree(ptr);
+    void* ptr4 = kmalloc(50);    // 0x1000000
+
+    if (ptr || ptr2 || ptr3 || ptr4) {
+        // suppress compiler error
+    }
+
+    // enable_interrupts();
 }

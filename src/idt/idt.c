@@ -4,7 +4,7 @@
 #include "../io/io.h"
 #include "../memory/memory.h"
 
-struct idt_entry idt_entries[ENKIOS_TOTAL_INTERRUPTS];
+struct idt_entry idt_entries[ENKI_TOTAL_INTERRUPTS];
 struct idtr_ptr idtr;
 
 extern void idt_load(struct idtr_ptr* ptr);
@@ -40,7 +40,7 @@ void idt_init() {
     idtr.base = (uint32_t) idt_entries;
 
     // set interrupts
-    for (int i = 0; i < ENKIOS_TOTAL_INTERRUPTS; i++) {
+    for (int i = 0; i < ENKI_TOTAL_INTERRUPTS; i++) {
         idt_set(i, no_interrupt);
     }
     idt_set(0x0, idt_zero);

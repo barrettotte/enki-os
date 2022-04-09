@@ -29,6 +29,10 @@ sudo dd if=boot.bin of=/dev/sdb   # overwrite USB's first sector with our bootlo
 - TODO: can I make a docker image for OS development ?
 - TODO: use `#pragma once` instead of `ifndef` guard?
 - TODO: consider use embedded asm in C instead of the separate asm files?
+- TODO: comments on all C functions
+- TODO: double check `static` used where needed
+- TODO: remove refs to `<stddef.h>` and any other `<std*.h>` file
+- TODO: reevaluate use of `goto`
 
 ## References
 
@@ -43,6 +47,7 @@ sudo dd if=boot.bin of=/dev/sdb   # overwrite USB's first sector with our bootlo
   - [A20 Line](https://wiki.osdev.org/A20_Line)
 - Kernel
   - [Interrupt Descriptor Table](https://wiki.osdev.org/Interrupt_Descriptor_Table)
+  - [Memory Map](https://wiki.osdev.org/Memory_Map_(x86))
 - [OSDev.org](https://wiki.osdev.org/Main_Page)
 - [BrokenThorn OS Dev](http://www.brokenthorn.com/Resources/OSDevIndex.html)
 - [x86 and amd64 instruction set](https://www.felixcloutier.com/x86/)

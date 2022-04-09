@@ -40,7 +40,7 @@ CPP_FLAGS := -g -ffreestanding \
 			 -nostdlib -nostartfiles -nodefaultlibs \
 			 -Wall
 
-QEMU := qemu-system-x86_64
+QEMU := qemu-system-i386
 QEMU_FLAGS := -drive file=$(BIN_DIR)/os.bin,format=raw
 
 $(TARGET): $(OBJECTS)
@@ -81,7 +81,7 @@ img:
 	dd if=/dev/zero bs=512 count=100 status=none>> $(BIN_DIR)/os.bin
 
 qemu:	build
-	$(QEMU) $(QEMU_FLAGS)
+	$(QEMU) $(QEMU_FLAGS) -monitor stdio
 
 debug:	build
 	@gdb -ex 'set confirm off' \
