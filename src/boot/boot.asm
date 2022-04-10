@@ -8,7 +8,7 @@
         CODE_SEG equ gdt_code - gdt_start   ; protected mode code segment
         DATA_SEG equ gdt_data - gdt_start   ; protected mode data segment
 
-_start: jmp short code                      ; jump over disk format info
+_start: jmp short code                      ; short jump over disk format info
         nop                                 ;
 
 times 33 db 0                               ; BPB - TODO:
@@ -95,31 +95,32 @@ load_32:                                    ;
 
 ata_lba_read:                               ; ***** ATA LBA Read *****
         mov ebx, eax                        ; save LBA
-        shr eax, 24                         ; highest byte
+        shr eax, 24                         ; bits 24-27 of LBA
         or eax, 0xE0                        ; select master drive
-        mov dx, 0x1F6                       ; hard disk controller port
+        mov dx, 0x1F6                       ; set port
         out dx, al                          ; send byte
 
         mov eax, ecx                        ; total sectors
-        mov dx, 0x1F2                       ;
-        out dx, al                          ;
+        mov dx, 0x1F2                       ; set port
+        out dx, al                          ; send to port
+
+        mov eax, ebx                        ; bits 0-7 of LBA
+        mov dx, 0x1F3                       ; set port
+        out dx, al                          ; send to port
 
         mov eax, ebx                        ; restore LBA
-        mov dx, 0x1F3                       ;
-        out dx, al                          ;
+        mov dx, 0x1F4                       ; set port
+        shr eax, 8                          ; bits 8-15 of LBA
+        out dx, al                          ; send to port
 
-        mov dx, 0x1F4                       ;
         mov eax, ebx                        ; restore LBA
-        shr eax, 8                          ; 
-        out dx, al                          ;
+        mov dx, 0x1F5                       ; set port
+        shr eax, 16                         ; bits 16-12 of LBA
+        out dx, al                          ; send to port
 
-        mov dx, 0x1F5                       ;
-        mov eax, ebx                        ;
-        shr eax, 16                         ; upper 16-bits
-
-        mov dx, 0x1F7                       ;
-        mov al, 0x20                        ;
-        out dx, al                          ;
+        mov dx, 0x1F7                       ; set port
+        mov al, 0x20                        ; command = read sector(s) with retry
+        out dx, al                          ; send to port
 
 .next_sector:                               ;
         push ecx                            ; stash sector_count
