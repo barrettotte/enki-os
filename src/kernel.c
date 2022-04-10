@@ -2,7 +2,8 @@
 #include "idt/idt.h"
 #include "io/io.h"
 #include "disk/disk.h"
-#include "fs/path_parser.h"
+#include "disk/disk_stream.h"
+#include "fs/path.h"
 #include "memory/heap/kheap.h"
 #include "memory/paging/paging.h"
 #include "string/string.h"
@@ -88,11 +89,13 @@ void kernel_main()
     paging_switch(paging_4gb_chunk_get_directory(kernel_chunk));
     enable_paging();
 
-    struct path_root* root = path_parse("0:/bin/shell.sh", NULL);
-    if (root) {
-
-    }
-
     enable_interrupts();
+
+    struct disk_stream* stream = disk_stream_new(0);
+    disk_stream_seek(stream, 0x201);
+    unsigned char c = 0;
+    disk_stream_read(stream, &c, 1);
+
+    // END
     print("\n\nend of kernel_main() reached\n");
 }

@@ -1,5 +1,5 @@
-#ifndef PATH_PARSER_H
-#define PATH_PARSER_H
+#ifndef PATH_H
+#define PATH_H
 
 struct path_root {
     int drive_no;

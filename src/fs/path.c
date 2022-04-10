@@ -3,7 +3,7 @@
 #include "../memory/memory.h"
 #include "../memory/heap/kheap.h"
 #include "../string/string.h"
-#include "path_parser.h"
+#include "path.h"
 
 // check if file path is valid; only three levels => 0:/dir/file.ext
 static int path_is_valid(const char* path) {
