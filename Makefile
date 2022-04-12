@@ -11,7 +11,7 @@ SRC_DIR := src
 TARGET  := $(BIN_DIR)/kernel.bin
 HEADERS := $(shell find $(SRC_DIR)/* -type f -iname "*.h")
 
-SRC_EXCL    := -not \( -path $(SRC_DIR)/boot/* -o -path $(SRC_DIR)/kernel.asm \)
+SRC_EXCL    := -not \( -path "$(SRC_DIR)/boot/*" -o -path "$(SRC_DIR)/kernel.asm" \)
 SRC_TYPES   := -type f \( -iname "*.asm" -o -iname "*.c" -o -iname "*.cpp" \)
 SOURCES     := $(shell find $(SRC_DIR)/* $(SRC_EXCL) $(SRC_TYPES))
 OBJECTS     := $(foreach OBJECT, $(patsubst %.asm, %.asm.o, $(patsubst %.c, %.o, $(patsubst %.cpp, %.o, $(SOURCES)))), $(OBJ_DIR)/$(OBJECT))
@@ -69,7 +69,7 @@ $(OBJ_DIR)/%.o: %.cpp
 
 all:	build
 
-build:	clean $(TARGET) img
+build:	clean $(TARGET) img mount unmount
 
 clean:
 	rm -rf $(BIN_DIR)/* $(OBJ_DIR)/*
@@ -78,10 +78,18 @@ img:
 	@echo "building image..."
 	dd if=$(BIN_DIR)/boot.bin status=none >> $(BIN_DIR)/os.bin
 	dd if=$(BIN_DIR)/kernel.bin status=none >> $(BIN_DIR)/os.bin
-	dd if=/dev/zero bs=512 count=100 status=none>> $(BIN_DIR)/os.bin
+	dd if=/dev/zero bs=1048576 count=16 status=none>> $(BIN_DIR)/os.bin
 
 qemu:	build
 	$(QEMU) $(QEMU_FLAGS) -monitor stdio
+
+mount:
+	@sudo mkdir -p /mnt/$(OS)
+	@sudo mount -t vfat $(BIN_DIR)/os.bin /mnt/$(OS)
+	@sudo cp hello.txt /mnt/$(OS)
+
+unmount:
+	@sudo umount /mnt/$(OS)
 
 debug:	build
 	@gdb -ex 'set confirm off' \

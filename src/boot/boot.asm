@@ -10,8 +10,28 @@
 
 _start: jmp short code                      ; short jump over disk format info
         nop                                 ;
+                                            ; ***** BIOS Parameter Block *****
+bpb_OEM:                 db "ENKI OS "      ; Name of OS (8 bytes)
+bpb_bytes_per_sector:    dw 0x200           ; bytes per logical sector
+bpb_sect_per_cluster:    db 0x80            ; logical sectors per cluster
+bpb_reserved_sectors:    dw 200             ; number of logical sectors before FAT (big kernel = big reserved sectors)
+bpb_number_of_FAT:       db 0x02            ; number of file allocation tables (usually 2)
+bpb_root_entries:        dw 0x40            ; max root directory entries 
+bpb_total_sectors:       dw 0x00            ; total logical sectors; if 0, more than 65535 sectors in volume
+bpb_media_descriptor:    db 0xF8            ; hard disk
+bpb_sectors_per_FAT:     dw 0x100           ; logical sectors per FAT
+bpb_sectors_per_track:   dw 0x20            ; physical sectors per track
+bpb_heads_per_cylinder:  dw 0x40            ; number of read-write heads
+bpb_hidden_sectors:      dd 0x00            ; sectors before partition with FAT volume (0 = unpartitioned)
+bpb_total_sectors_big:   dd 0x773594        ; large sector count (set if bpb_total_sectors = 0)
 
-times 33 db 0                               ; BPB - TODO:
+                                            ; ***** extended BPB *****
+eb_drive_number:         db 0x80            ; physical drive number; 0x0=floppy, 0x80=HDD
+eb_unused:               db 0x00            ; reserved (or WinNT flags)
+eb_ext_boot_signature:   db 0x29            ; extended boot signature; MS/PC-DOS version 4.0 
+eb_serial_number:        dd 0xDEADBEEF      ; volume ID, xxxx-xxxx
+eb_volume_label:         db "ENKI BOOT  "   ; partition volume label (11 bytes)
+eb_file_system:          db "FAT16   "      ; file system type (8 bytes)
 
 code:   jmp 0x0:main                        ; init code segment
 

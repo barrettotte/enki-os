@@ -77,7 +77,6 @@ void kernel_main()
 {
     tty_init();
     print("Welcome to Enki OS\n");
-    print("\n\nHello world\n");
 
     kheap_init();
     disk_search_and_init();
