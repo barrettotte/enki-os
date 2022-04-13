@@ -27,7 +27,7 @@ bpb_total_sectors_big:   dd 0x773594        ; large sector count (set if bpb_tot
 
                                             ; ***** extended BPB *****
 eb_drive_number:         db 0x80            ; physical drive number; 0x0=floppy, 0x80=HDD
-eb_unused:               db 0x00            ; reserved (or WinNT flags)
+eb_win_nt:               db 0x00            ; reserved (or WinNT flags)
 eb_ext_boot_signature:   db 0x29            ; extended boot signature; MS/PC-DOS version 4.0 
 eb_serial_number:        dd 0xDEADBEEF      ; volume ID, xxxx-xxxx
 eb_volume_label:         db "ENKI BOOT  "   ; partition volume label (11 bytes)

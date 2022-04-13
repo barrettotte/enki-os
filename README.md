@@ -29,7 +29,7 @@ sudo dd if=boot.bin of=/dev/sdb   # overwrite USB's first sector with our bootlo
 
 ## TODO Items
 
-- TODO: can I make a docker image for OS development ?
+- TODO: can I make a docker image for OS development ? vagrant?
 - TODO: ASCII art on launch
 - TODO: three shell commands
 - TODO: one simple game
@@ -40,8 +40,13 @@ sudo dd if=boot.bin of=/dev/sdb   # overwrite USB's first sector with our bootlo
 - TODO: comment asm
 - TODO: double check `static` used where needed
 - TODO: remove refs to `<stddef.h>` and any other `<std*.h>` file
+- TODO: implement a reasonable amount of stdlib - https://en.cppreference.com/w/c/header
 - TODO: reevaluate use of `goto`
 - TODO: compare with osdev meatyskeleton and the likes
+- TODO: refactor some paths to `stdlib` (ex: string, memory, )
+  - `io` to `cpu/`
+  - `string` to `stdlib/`
+  - `kernel.*` to `kernel/`
 
 ## References
 

@@ -47,8 +47,7 @@ $(TARGET): $(OBJECTS)
 	@mkdir -p $(@D)
 	$(AS) -f bin $(SRC_DIR)/boot/boot.asm -o $(BIN_DIR)/boot.bin
 	$(AS) $(AS_FLAGS) $(SRC_DIR)/kernel.asm -o $(OBJ_DIR)/kernel.asm.o
-	@echo "linking..."
-	@echo "objects: $+"
+	@echo "linking...objects: $+"
 	$(LD) $(LD_FLAGS) $(OBJ_DIR)/kernel.asm.o $+ -o $(KERNEL_FULL)
 	$(CC) $(CC_FLAGS) -T $(SRC_DIR)/linker.ld -o $@ -ffreestanding -O0 -nostdlib $(KERNEL_FULL)
 

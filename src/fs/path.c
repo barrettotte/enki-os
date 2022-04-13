@@ -8,7 +8,7 @@
 // check if file path is valid; only three levels => 0:/dir/file.ext
 static int path_is_valid(const char* path) {
     int len = strnlen(path, ENKI_MAX_PATH);
-    return (len >= 3 && is_digit(path[0]) && memcmp((void *) &path[1], ":/", 2) == 0);
+    return (len >= 3 && isdigit(path[0]) && memcmp((void *) &path[1], ":/", 2) == 0);
 }
 
 // get drive number from file path
@@ -16,7 +16,7 @@ static int path_get_drive(const char** path) {
     if (!path_is_valid(*path)) {
         return -EBADPATH;
     }
-    int drive_no = to_digit(*path[0]);
+    int drive_no = todigit(*path[0]);
     *path += 3; // consume drive number "0:/"
     return drive_no;
 }

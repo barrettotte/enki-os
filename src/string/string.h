@@ -9,10 +9,25 @@ int strlen(const char* s);
 // calculate length of string up to n
 int strnlen(const char* s, int n);
 
+// read string until provided terminator or null terminator
+int strnlen_until(const char* s, int n, char terminator);
+
+// compare two strings insensitive
+int istrncmp(const char* s1, const char* s2, int n);
+
+// compare two strings
+int strncmp(const char* s1, const char* s2, int n);
+
+// copy string from source to destination
+char* strcpy(char* dest, const char* src);
+
 // check if character is a digit
-bool is_digit(char c);
+bool isdigit(char c);
 
 // convert character to digit (assumes character can be converted to digit)
-int to_digit(char c);
+int todigit(char c);
+
+// convert character to lowercase
+char tolower(char c);
 
 #endif

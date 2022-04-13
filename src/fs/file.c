@@ -1,9 +1,12 @@
-#include "file.h"
 #include "../config.h"
 #include "../kernel.h"
 #include "../status.h"
+#include "../disk/disk.h"
 #include "../memory/heap/kheap.h"
 #include "../memory/memory.h"
+#include "../string/string.h"
+#include "fat/fat16.h"
+#include "file.h"
 
 struct file_system* file_systems[ENKI_MAX_FILE_SYSTEMS];
 struct file_descriptor* file_descriptors[ENKI_MAX_FILE_DESCRIPTORS];
@@ -16,32 +19,6 @@ static struct file_system** fs_get_free_file_system() {
         }
     }
     return 0;
-}
-
-void fs_insert_file_system(struct file_system* fs) {
-    struct file_system** free_fs;
-    free_fs = fs_get_free_file_system();
-
-    if (!free_fs) {
-        print("Panic! Problem inserting file system, no free fs");
-        while(1) {}
-    }
-    *free_fs = fs;
-}
-
-// load file systems built into the kernel
-static void fs_static_load() {
-    // TODO: fs_insert_file_system(fat16_init());
-}
-
-void fs_load() {
-    memset(file_systems, 0, sizeof(file_systems));
-    fs_static_load();
-}
-
-void fs_init() {
-    memset(file_descriptors, 0, sizeof(file_descriptors));
-    fs_load();
 }
 
 // create a reference to new file descriptor
@@ -69,6 +46,32 @@ static struct file_descriptor* file_get_descriptor(int fd) {
     return file_descriptors[fd - 1]; // one-indexed to zero-indexed
 }
 
+// load file systems built into the kernel
+static void fs_static_load() {
+    fs_insert_file_system(fat16_init());
+}
+
+void fs_insert_file_system(struct file_system* fs) {
+    struct file_system** free_fs;
+    free_fs = fs_get_free_file_system();
+
+    if (!free_fs) {
+        print("Panic! Problem inserting file system, no free fs");
+        while(1) {}
+    }
+    *free_fs = fs;
+}
+
+void fs_load() {
+    memset(file_systems, 0, sizeof(file_systems));
+    fs_static_load();
+}
+
+void fs_init() {
+    memset(file_descriptors, 0, sizeof(file_descriptors));
+    fs_load();
+}
+
 struct file_system* fs_resolve(struct disk* disk) {
     struct file_system* fs = 0;
     for (int i = 0; i < ENKI_MAX_FILE_SYSTEMS; i++) {
@@ -80,6 +83,66 @@ struct file_system* fs_resolve(struct disk* disk) {
     return fs;
 }
 
+// convert string to valid file mode
+FILE_MODE file_get_mode_from_str(const char* s) {
+    FILE_MODE mode = FILE_MODE_INVALID;
+    if (strncmp(s, "r", 1) == 0) {
+        mode = FILE_MODE_READ;
+    } else if (strncmp(s, "w", 1) == 0) {
+        mode = FILE_MODE_WRITE;
+    } else if (strncmp(s, "a", 1) == 0) {
+        mode = FILE_MODE_APPEND;
+    }
+    return mode;
+}
+
 int fopen(const char* file_name, const char* mode) {
-    return -EIO;
+    int status = 0;
+
+    struct path_root* root = path_parse(file_name, NULL);
+    if (!root) {
+        status = -EINVARG;
+        goto out;
+    }
+    if (!root->first) {
+        status = -EINVARG; // i:/
+        goto out;
+    }
+    
+    struct disk* disk = disk_get(root->drive_no);
+    if (!disk) {
+        status = -EIO;
+        goto out; // drive doesn't exist
+    }
+    if (!disk->fs) {
+        status = -EIO;
+        goto out;
+    }
+
+    FILE_MODE fmode = file_get_mode_from_str(mode);
+    if (fmode == FILE_MODE_INVALID) {
+        status = -EINVARG;
+        goto out;  // invalid file mode
+    }
+
+    void* desc_private = disk->fs->open(disk, root->first, fmode);
+    if (IS_ERR(desc_private)) {
+        status = ERROR_I(desc_private);
+        goto out;
+    }
+
+    struct file_descriptor* desc = 0;
+    status = file_new_descriptor(&desc);
+    if (status < 0) {
+        goto out;
+    }
+    desc->fs = disk->fs;
+    desc->private_data = desc_private;
+    desc->disk = disk;
+    status = desc->index;
+out:
+    if (status < 0) {
+        status = 0;
+    }
+    return status;
 }

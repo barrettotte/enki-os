@@ -19,7 +19,7 @@ enum {
 };
 
 struct disk;  // fwd decl
-typedef void*(*FS_OPEN_FUNCTION)(struct disk* disk, struct path_part path, FILE_MODE mode);
+typedef void*(*FS_OPEN_FUNCTION)(struct disk* disk, struct path_part* path, FILE_MODE mode);
 typedef int (*FS_RESOLVE_FUNCTION)(struct disk* disk);
 
 struct file_system {
@@ -30,7 +30,7 @@ struct file_system {
 
 struct file_descriptor {
     int index;
-    struct file_system fs;
+    struct file_system* fs;
     void* private_data;
     struct disk* disk;
 };
@@ -41,7 +41,7 @@ void fs_init();
 // 
 int fopen(const char* file_name, const char* mode);
 
-// 
+// attempt to insert new file system instance into file system list
 void fs_insert_file_system(struct file_system* fs);
 
 //

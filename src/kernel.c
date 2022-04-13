@@ -4,6 +4,7 @@
 #include "disk/disk.h"
 #include "disk/disk_stream.h"
 #include "fs/path.h"
+#include "fs/file.h"
 #include "memory/heap/kheap.h"
 #include "memory/paging/paging.h"
 #include "string/string.h"
@@ -73,12 +74,12 @@ void print(const char *s)
 
 static struct paging_4gb_chunk *kernel_chunk = 0;
 
-void kernel_main()
-{
+void kernel_main() {
     tty_init();
     print("Welcome to Enki OS\n");
 
     kheap_init();
+    fs_init();
     disk_search_and_init();
     idt_init();
 
@@ -90,11 +91,5 @@ void kernel_main()
 
     enable_interrupts();
 
-    struct disk_stream* stream = disk_stream_new(0);
-    disk_stream_seek(stream, 0x201);
-    unsigned char c = 0;
-    disk_stream_read(stream, &c, 1);
-
-    // END
     print("\n\nend of kernel_main() reached\n");
 }

@@ -11,7 +11,9 @@ typedef unsigned int ENKI_DISK_TYPE;
 struct disk {
     ENKI_DISK_TYPE type;
     int sector_size;
+    int id;
     struct file_system* fs;
+    void* fs_private;
 };
 
 // find available disks and init references
