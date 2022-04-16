@@ -8,6 +8,9 @@
 #define ERROR_I(val) (int)(val)
 #define IS_ERR(val) ((int) val < 0)
 
+// halt kernel and display panic message
+void panic(const char* msg);
+
 // kernel entry
 void kernel_main();
 

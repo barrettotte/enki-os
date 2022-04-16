@@ -1,3 +1,4 @@
+#include "config.h"
 #include "kernel.h"
 #include "idt/idt.h"
 #include "io/io.h"
@@ -5,7 +6,9 @@
 #include "disk/disk_stream.h"
 #include "fs/path.h"
 #include "fs/file.h"
+#include "gdt/gdt.h"
 #include "memory/heap/kheap.h"
+#include "memory/memory.h"
 #include "memory/paging/paging.h"
 #include "string/string.h"
 
@@ -74,9 +77,26 @@ void print(const char *s)
 
 static struct paging_4gb_chunk *kernel_chunk = 0;
 
+void panic(const char* msg) {
+    print(msg);
+    while(1) {}
+}
+
+struct gdt gdt_real[ENKI_TOTAL_GDT_SEGMENTS];
+struct gdt_structured gdt_structured[ENKI_TOTAL_GDT_SEGMENTS] = {
+    {.base = 0x00, .limit = 0x00, .type = 0x00},      // null
+    {.base = 0x00, .limit = 0xFFFFFFFF, .type=0x9A},  // kernel code
+    {.base = 0x00, .limit = 0xFFFFFFFF, .type=0X92},  // kernel data
+};
+
 void kernel_main() {
     tty_init();
     print("Welcome to Enki OS\n");
+
+    // init GDT
+    memset(gdt_real, 0x00, sizeof(gdt_real));
+    gdt_unstructure(gdt_real, gdt_structured, ENKI_TOTAL_GDT_SEGMENTS);
+    gdt_load(gdt_real, sizeof(gdt_real));
 
     kheap_init();
     fs_init();
