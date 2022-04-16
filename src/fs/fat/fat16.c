@@ -4,6 +4,8 @@
 #include "../../disk/disk_stream.h"
 #include "../../memory/heap/kheap.h"
 #include "../../memory/memory.h"
+#include "../../config.h"
+#include "../../kernel.h"
 #include "../../status.h"
 #include "../../string/string.h"
 #include "fat16.h"
@@ -91,7 +93,7 @@ struct fat_item {
     FAT_ITEM_TYPE type;
 };
 
-struct fat_item_descriptor {
+struct fat_file_descriptor {
     struct fat_item* item;
     uint32_t pos;
 };
@@ -107,10 +109,18 @@ struct fat_private {
 
 int fat16_resolve(struct disk* disk);
 void* fat16_open(struct disk* disk, struct path_part* path, FILE_MODE mode);
+int fat16_read(struct disk* disk, void* desc, uint32_t size, uint32_t blocks, char* out);
+int fat16_close(void *private);
+int fat16_seek(void* private, uint32_t offset, FILE_SEEK_MODE mode);
+int fat16_stat(struct disk* disk, void* private, struct file_stat* stat);
 
 struct file_system fat16_fs = {
     .resolve = fat16_resolve,
-    .open = fat16_open
+    .open = fat16_open,
+    .read = fat16_read,
+    .close = fat16_close,
+    .seek = fat16_seek,
+    .stat = fat16_stat
 };
 
 struct file_system* fat16_init() {
@@ -212,20 +222,20 @@ int fat16_resolve(struct disk* disk) {
     struct disk_stream* stream = disk_stream_new(disk->id);
     if (!stream) {
         status = -ENOMEM;
-        goto out;
+        goto out;  // failed to allocate memory
     }
     if (disk_stream_read(stream, &fat_private->header, sizeof(fat_private->header)) != OK) {
         status = -EIO;
-        goto out;
+        goto out;  // 
     }
 
     if (fat_private->header.shared.ext.ext_boot_signature != 0x29) {
         status = -EFSNOTUS;
-        goto out;
+        goto out;  // OS isn't in charge of this
     }
     if (fat16_get_root(disk, fat_private, &fat_private->root) != OK) {
         status = -EIO;
-        goto out;
+        goto out;  // 
     }
 out:
     if (stream) {
@@ -238,6 +248,380 @@ out:
     return status;
 }
 
+// get file name without padding
+void fat16_fmt_str(char** out, const char* in) {
+    while (*in != 0x00 && *in != 0x20) {
+        **out = *in;
+        *out += 1;
+        in++;
+    }
+    if (*in == 0x20) {
+        **out = 0x00;  // space encountered, end string
+    }
+}
+
+// resolve file name with extension.  ex:  "TEST    TXT" => "test.txt"
+void fat16_file_name_resolve(struct fat_dir_item* item, char* out, int max) {
+    memset(out, 0x00, max);
+    char* tmp = out;
+    fat16_fmt_str(&tmp, (const char*) item->name);
+    
+    if (item->ext[0] != 0x00 && item->ext[0] != 0x20) {
+        *tmp++ = '.';
+        fat16_fmt_str(&tmp, (const char*) item->ext);
+    }
+}
+
+// clone directory item
+struct fat_dir_item* fat16_clone_dir_item(struct fat_dir_item* item, int size) {
+    struct fat_dir_item* copy = 0;
+
+    if (size < sizeof(struct fat_dir_item)) {
+        return 0;
+    }
+
+    copy = kzalloc(size);
+    if (!copy) {
+        return 0;
+    }
+    memcpy(copy, item, size);
+    return copy;
+}
+
+// 
+static uint32_t fat16_get_first_fat_sector(struct fat_private* private) {
+    return private->header.primary.reserved_sectors;
+}
+
+// get FAT entry from FAT
+static int fat16_get_fat_entry(struct disk* disk, int cluster) {
+    int result = 0;
+    struct fat_private* private = disk->fs_private;
+    struct disk_stream* stream = private->fat_read;
+
+    if (!stream) {
+        goto out;
+    }
+    uint32_t fat_table_pos = fat16_get_first_fat_sector(private) * disk->sector_size;
+    result = disk_stream_seek(stream, fat_table_pos * (cluster * ENKI_FAT16_ENTRY_SIZE));
+    if (result < 0) {
+        goto out;
+    }
+    uint16_t read_result = 0;
+    read_result = disk_stream_read(stream, &read_result, sizeof(read_result));
+    if (read_result < 0) {
+        goto out;
+    }
+    result = read_result;
+out:
+    return result;
+}
+
+// get cluster to use based on starting cluster and offset
+static int fat16_get_cluster_offset(struct disk* disk, int cluster_start, int offset) {
+    int result = 0;
+    struct fat_private* private = disk->fs_private;
+    int cluster_size = private->header.primary.sect_per_cluster * disk->sector_size;
+    int cluster_target = cluster_start;
+    int ahead = offset / cluster_size;
+
+    for (int i = 0; i < ahead; i++) {
+        int entry = fat16_get_fat_entry(disk, cluster_target);
+        
+        if (entry == 0xFF8 || entry == 0xFFF) {
+            result = -EIO;
+            goto out;  // error or end of file
+        }
+        if (entry == ENKI_FAT16_BAD_SECTOR) {
+            result = -EIO;
+            goto out;  // corrupted
+        }
+        if (entry == 0xFF0 || entry == 0xFF6) {
+            result = -EIO;
+            goto out;  // reserved sector
+        }
+        if (entry == 0x00) {
+            result = -EIO;
+            goto out;  // FAT is corrupted?
+        }
+
+        cluster_target = entry;
+    }
+    result = cluster_target;
+out:
+    return result;
+}
+
+// get 32-bit address of first cluster
+static uint32_t fat16_get_first_cluster(struct fat_dir_item* item) {
+    return (item->high_first_cluster) | (item->low_first_cluster);
+}
+
+// convert cluster number to sector
+static int fat16_cluster_to_sector(struct fat_private* private, int cluster) {
+    return private->root.sector_end + ((cluster - 2) * private->header.primary.sect_per_cluster);
+}
+
+//
+static int fat16_read_internal_stream(struct disk* disk, struct disk_stream* stream, int cluster, int offset, int total, void* out) {
+    int status = OK;
+    struct fat_private* private = disk->fs_private;
+    int cluster_size = private->header.primary.sect_per_cluster * disk->sector_size;
+    
+    int cluster_target = fat16_get_cluster_offset(disk, cluster, offset);
+    if (cluster_target < 0) {
+        status = cluster_target;
+        goto out;
+    }
+
+    int cluster_offset = offset % cluster_size;
+    int start_sector = fat16_cluster_to_sector(private, cluster_target);
+    int start_pos = (start_sector * disk->sector_size) + cluster_offset;
+    int to_read = total > cluster_size ? cluster_size : total;
+    
+    status = disk_stream_seek(stream, start_pos);
+    if (status != OK) {
+        goto out;
+    }
+    status = disk_stream_read(stream, out, to_read);
+    if (status != OK) {
+        goto out;
+    }
+    
+    total -= to_read;
+    if (total > 0) {
+        status = fat16_read_internal_stream(disk, stream, cluster, offset + to_read, total, out + to_read);
+    }
+
+out:
+    return status;
+}
+
+// read from disk via a series of clusters
+static int fat16_read_internal(struct disk* disk, int start_cluster, int offset, int total, void* out) {
+    struct fat_private* fs_private = disk->fs_private;
+    struct disk_stream* stream = fs_private->cluster_read;
+    return fat16_read_internal_stream(disk, stream, start_cluster, offset, total, out);
+}
+
+// free allocated memory of FAT directory
+void fat16_free_dir(struct fat_dir* dir) {
+    if (dir) {
+        if (!dir->item) {
+            kfree(dir->item);
+        }
+        kfree(dir);
+    }
+}
+
+// free allocated memory of FAT item
+void fat16_fat_item_free(struct fat_item* item) {
+    if (item->type == FAT_ITEM_TYPE_DIR) {
+        fat16_free_dir(item->dir);
+    } else if (item->type == FAT_ITEM_TYPE_FILE) {
+        kfree(item->item);
+    } else {
+        // TODO: panic!
+    }
+    kfree(item);
+}
+
+//
+struct fat_dir* fat16_load_fat_dir(struct disk* disk, struct fat_dir_item* item) {
+    int status = 0;
+    struct fat_dir* dir = 0;
+    struct fat_private* private = disk->fs_private;
+    
+    if (!(item->attribute & FAT_FILE_SUBDIRECTORY)) {
+        status = -EINVARG;
+        goto out;
+    }
+
+    dir = kzalloc(sizeof(struct fat_dir));
+    if (!dir) {
+        status = -ENOMEM;
+        goto out;
+    }
+
+    int cluster = fat16_get_first_cluster(item);
+    int sector = fat16_cluster_to_sector(private, cluster);
+    int total = fat16_get_dir_items(disk, sector);
+    dir->total = total;
+
+    int size = dir->total * sizeof(struct fat_dir_item);
+    dir->item = kzalloc(size);
+    if (dir->item) {
+        status = -ENOMEM;
+        goto out;
+    }
+
+    status = fat16_read_internal(disk, cluster, 0x00, size, dir->item);
+    if (status != OK) {
+        goto out;
+    }
+
+out:
+    if (status != OK) {
+        fat16_free_dir(dir);
+    }
+    return dir;
+}
+
+//
+struct fat_item* fat16_new_item_for_dir(struct disk* disk, struct fat_dir_item* item) {
+    struct fat_item* f = kzalloc(sizeof(struct fat_item));
+    if (!f) {
+        return 0;  // couldn't allocate
+    }
+
+    if (item->attribute & FAT_FILE_SUBDIRECTORY) {
+        f->dir = fat16_load_fat_dir(disk, item);
+        f->type = FAT_ITEM_TYPE_DIR;
+    }
+    f->type = FAT_ITEM_TYPE_FILE;
+    f->item = fat16_clone_dir_item(item, sizeof(struct fat_dir_item));
+
+    return f;
+}
+
+// find file/directory in directory using path
+struct fat_item* fat16_find_item_in_dir(struct disk* disk, struct fat_dir* dir, const char* name) {
+    struct fat_item* item = 0;
+    char tmp_name[ENKI_MAX_PATH];
+
+    for (int i = 0; i < dir->total; i++) {
+        fat16_file_name_resolve(&dir->item[i], tmp_name, sizeof(tmp_name));
+        
+        if (istrncmp(tmp_name, name, sizeof(tmp_name)) == 0) {
+            item = fat16_new_item_for_dir(disk, &dir->item[i]);
+        }
+    }
+    return item;
+}
+
+//
+struct fat_item* fat16_get_dir_entry(struct disk* disk, struct path_part* path) {
+    struct fat_private* fat_private = disk->fs_private;
+    struct fat_item* current = 0;
+    struct fat_item* root = fat16_find_item_in_dir(disk, &fat_private->root, path->part);
+
+    if (!root) {
+        goto out;  // item not found
+    }
+    struct path_part* next_path = path->next;
+    current = root;
+    while (next_path != 0) {
+        if (current->type != FAT_ITEM_TYPE_DIR) {
+            current = 0;  // can't access file as a directory
+            break;
+        }
+        struct fat_item* tmp = fat16_find_item_in_dir(disk, current->dir, next_path->part);
+        fat16_fat_item_free(current);
+        current = tmp;
+        next_path = next_path->next;
+    }
+
+out:
+    return current;
+}
+
 void* fat16_open(struct disk* disk, struct path_part* path, FILE_MODE mode) {
+    if (mode != FILE_MODE_READ) {
+        return ERROR(-ERDONLY);
+    }
+
+    struct fat_file_descriptor* descriptor = 0;
+    descriptor = kzalloc(sizeof(struct fat_file_descriptor));
+    if (!descriptor) {
+        return ERROR(-ENOMEM); // failed to allocate memory
+    }
+
+    descriptor->item = fat16_get_dir_entry(disk, path);
+    if (!descriptor->item) {
+        return ERROR(-EIO);  // couldn't find file
+    }
+    descriptor->pos = 0;
+
+    return descriptor;
+}
+
+int fat16_read(struct disk* disk, void* desc, uint32_t size, uint32_t blocks, char* out) {
+    int result = 0;
+    struct fat_file_descriptor* fat_desc = desc;
+    struct fat_dir_item* item = fat_desc->item->item;
+    int offset = fat_desc->pos;
+
+    for (uint32_t i = 0; i < blocks; i++) {
+        result = fat16_read_internal(disk, fat16_get_first_cluster(item), offset, size, out);
+        if (IS_ERR(result)) {
+            return result;
+        }
+        out += size;
+        offset += size;
+    }
+    return blocks;
+}
+
+static void fat16_free_file_descriptor(struct fat_file_descriptor* desc) {
+    fat16_fat_item_free(desc->item);
+    kfree(desc);
+}
+
+int fat16_close(void* private) {
+    fat16_free_file_descriptor((struct fat_file_descriptor*) private);
     return 0;
+}
+
+int fat16_seek(void* private, uint32_t offset, FILE_SEEK_MODE mode) {
+    int result = 0;
+    struct fat_file_descriptor* desc = private;
+    struct fat_item* desc_item = desc->item;
+
+    if (desc_item->type != FAT_ITEM_TYPE_FILE) {
+        result = -EINVARG;
+        goto out;  // only seek on files
+    }
+
+    struct fat_dir_item* item = desc_item->item;
+    if (offset >= item->file_size) {
+        result = -EIO;
+        goto out;
+    }
+
+    switch (mode) {
+        case SEEK_SET:
+            desc->pos = offset;
+            break;
+        case SEEK_END:
+            result = -EUNIMP;
+            break;
+        case SEEK_CUR:
+            desc->pos += offset;
+            break;
+        default:
+            result = -EINVARG;
+            break;
+    }
+out:
+    return result;    
+}
+
+int fat16_stat(struct disk* disk, void* private, struct file_stat* stat) {
+    int result = 0;
+    struct fat_file_descriptor* desc = (struct fat_file_descriptor*) private;
+    struct fat_item* desc_item = desc->item;
+    if (desc->item->type != FAT_ITEM_TYPE_FILE) {
+        result = -EINVARG;
+        goto out;
+    }
+
+    struct fat_dir_item* item = desc_item->item;
+    stat->file_size = item->file_size;
+    stat->flags = 0x00;
+
+    if (item->attribute & FAT_FILE_READ_ONLY) {
+        stat->flags |= FILE_STAT_READ_ONLY;
+    }
+out:
+    return result;
 }

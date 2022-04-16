@@ -15,4 +15,6 @@
 #define ENKI_MAX_FILE_SYSTEMS     12
 #define ENKI_MAX_FILE_DESCRIPTORS 512
 
+#define ENKI_MAX_PATH 108
+
 #endif

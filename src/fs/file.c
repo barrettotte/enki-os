@@ -21,6 +21,12 @@ static struct file_system** fs_get_free_file_system() {
     return 0;
 }
 
+// 
+static void file_free_descriptor(struct file_descriptor* desc) {
+    file_descriptors[desc->index-1] = 0x00;
+    kfree(desc);
+}
+
 // create a reference to new file descriptor
 static int file_new_descriptor(struct file_descriptor** desc_out) {
     int status = -ENOMEM;
@@ -145,4 +151,63 @@ out:
         status = 0;
     }
     return status;
+}
+
+int fread(void* buf, uint32_t size, uint32_t blocks, int fd) {
+    int status = 0;
+    if (size == 0 || blocks == 0 || fd < 1) {
+        status = -EINVARG;
+        goto out;
+    }
+
+    struct file_descriptor* desc = file_get_descriptor(fd);
+    if (!desc) {
+        status = -EINVARG;
+        goto out;
+    }
+
+    status = desc->fs->read(desc->disk, desc->private_data, size, blocks, (char *) buf);
+
+out:
+    return status;
+}
+
+int fclose(int fd) {
+    int result = 0;
+    struct file_descriptor* desc = file_get_descriptor(fd);
+    if (!desc) {
+        result = -EIO;
+        goto out;
+    }
+
+    result = desc->fs->close(desc->private_data);
+    if (result == OK) {
+        file_free_descriptor(desc);
+    }
+out:
+    return result;
+}
+
+int fseek(int fd, int offset, FILE_SEEK_MODE mode) {
+    int result = 0;
+    struct file_descriptor* desc = file_get_descriptor(fd);
+    if (!desc) {
+        result = -EIO;
+        goto out;
+    }
+    result = desc->fs->seek(desc->private_data, offset, mode);
+out:
+    return result;
+}
+
+int fstat(int fd, struct file_stat* stat) {
+    int result = 0;
+    struct file_descriptor* desc = file_get_descriptor(fd);
+    if (!desc) {
+        result = -EIO;
+        goto out;
+    }
+    result = desc->fs->stat(desc->disk, desc->private_data, stat);
+out:
+    return result;
 }

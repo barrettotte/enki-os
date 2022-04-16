@@ -1,4 +1,4 @@
-#include "../kernel.h"
+#include "../config.h"
 #include "../status.h"
 #include "../memory/memory.h"
 #include "../memory/heap/kheap.h"

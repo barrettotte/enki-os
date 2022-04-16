@@ -91,5 +91,13 @@ void kernel_main() {
 
     enable_interrupts();
 
+    int fd = fopen("0:/hello.txt", "r");
+    if (fd) {
+        struct file_stat s;
+        fstat(fd, &s);
+        fclose(fd);
+        print("!");
+    }
+
     print("\n\nend of kernel_main() reached\n");
 }
