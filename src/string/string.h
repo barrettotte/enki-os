@@ -21,6 +21,9 @@ int strncmp(const char* s1, const char* s2, int n);
 // copy string from source to destination
 char* strcpy(char* dest, const char* src);
 
+// copy string from source to destination up to n
+char* strncpy(char* dest, const char* src, int n);
+
 // check if character is a digit
 bool isdigit(char c);
 

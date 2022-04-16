@@ -11,6 +11,7 @@
 #include "memory/memory.h"
 #include "memory/paging/paging.h"
 #include "string/string.h"
+#include "task/tss.h"
 
 #include <stddef.h>
 #include <stdint.h>
@@ -82,16 +83,20 @@ void panic(const char* msg) {
     while(1) {}
 }
 
+struct tss tss;
 struct gdt gdt_real[ENKI_TOTAL_GDT_SEGMENTS];
 struct gdt_structured gdt_structured[ENKI_TOTAL_GDT_SEGMENTS] = {
-    {.base = 0x00, .limit = 0x00, .type = 0x00},      // null
-    {.base = 0x00, .limit = 0xFFFFFFFF, .type=0x9A},  // kernel code
-    {.base = 0x00, .limit = 0xFFFFFFFF, .type=0X92},  // kernel data
+    {.base = 0x00, .limit = 0x00, .type = 0x00},               // null
+    {.base = 0x00, .limit = 0xFFFFFFFF, .type=0x9A},           // kernel code
+    {.base = 0x00, .limit = 0xFFFFFFFF, .type=0X92},           // kernel data
+    {.base = 0x00, .limit = 0xFFFFFFFF, .type=0xF8},           // user code
+    {.base = 0x00, .limit = 0xFFFFFFFF, .type=0xF2},           // user data
+    {.base = (uint32_t)&tss, .limit=sizeof(tss), .type=0xE9},  // task switching segment
 };
 
 void kernel_main() {
     tty_init();
-    print("Welcome to Enki OS\n");
+    print("Welcome to Enki OS\n\n");
 
     // init GDT
     memset(gdt_real, 0x00, sizeof(gdt_real));
@@ -103,6 +108,12 @@ void kernel_main() {
     disk_search_and_init();
     idt_init();
 
+    // init TSS
+    memset(&tss, 0x00, sizeof(tss));
+    tss.esp0 = 0x600000;
+    tss.ss0 = KERNEL_DATA_SEG;
+    tss_load(0x28);
+
     // paging
     uint8_t paging_flags = PAGING_IS_WRITEABLE | PAGING_IS_PRESENT | PAGING_ACCESS_FROM_ALL;
     kernel_chunk = paging_new_4gb(paging_flags);
@@ -111,13 +122,15 @@ void kernel_main() {
 
     enable_interrupts();
 
+    // test FAT16 file open
     int fd = fopen("0:/hello.txt", "r");
     if (fd) {
+        print("opened 0:/hello.txt\n");
         struct file_stat s;
         fstat(fd, &s);
         fclose(fd);
-        print("!");
+        print("closed 0:/hello.txt\n");
     }
 
-    print("\n\nend of kernel_main() reached\n");
+    print("\nend of kernel_main() reached\n");
 }

@@ -7,9 +7,9 @@
 struct idt_entry idt_entries[ENKI_TOTAL_INTERRUPTS];
 struct idtr_ptr idtr;
 
-extern void idt_load(struct idtr_ptr* ptr);
-extern void no_interrupt();
-extern void int_21h();
+void idt_load(struct idtr_ptr* ptr);
+void no_interrupt();
+void int_21h();
 
 void int_21h_handler() {
     print("Keyboard pressed\n");

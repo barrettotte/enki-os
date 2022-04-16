@@ -9,5 +9,6 @@
 #define EFSNOTUS 5  // not responsible for this file system on a disk
 #define ERDONLY  6  // read-only
 #define EUNIMP   7  // unimplemented feature was used
+#define EISTKN   8  // process slot is already taken
 
 #endif

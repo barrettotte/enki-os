@@ -21,6 +21,9 @@ struct paging_4gb_chunk {
 // create page directory, mapped linearly
 struct paging_4gb_chunk* paging_new_4gb(uint8_t flags);
 
+// free memory used by chunk
+void paging_free_4gb(struct paging_4gb_chunk* chunk);
+
 // access directory of chunk
 uint32_t* paging_4gb_chunk_get_directory(struct paging_4gb_chunk* chunk);
 
@@ -31,10 +34,23 @@ void paging_switch(uint32_t* directory);
 bool paging_is_aligned(void* addr);
 
 // enable paging for processor
-extern void enable_paging();
+void enable_paging();
 
 // find directory index and table index for a virtual address
 int paging_get_indices(void* virt_addr, uint32_t* dir_idx_out, uint32_t* table_idx_out);
+
+//
+// align address to page size
+void* paging_align_address(void* addr);
+
+//
+int paging_map(uint32_t* dir, void* virt_addr, void* phys_addr, int flags);
+
+//
+int paging_map_range(uint32_t* dir, void* virt_addr, void* phys_addr, int page_count, int flags);
+
+//
+int paging_map_to(uint32_t* dir, void* virt_addr, void* phys_addr, void* phys_end, int flags);
 
 // set page table entry
 int paging_set(uint32_t* directory, void* virt_addr, uint32_t val);

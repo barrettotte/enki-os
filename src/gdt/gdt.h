@@ -10,7 +10,7 @@ struct gdt {
     uint8_t access;
     uint8_t high_flags;
     uint8_t base_24_31_bits;
-};
+} __attribute__((packed));
 
 struct gdt_structured {
     uint32_t base;
@@ -19,7 +19,7 @@ struct gdt_structured {
 };
 
 //
-extern void gdt_load(struct gdt* gdt, int size);
+void gdt_load(struct gdt* gdt, int size);
 
 // convert gdt_structured to gdt
 void gdt_unstructure(struct gdt* gdt, struct gdt_structured* gdt_s, int total_entries);
