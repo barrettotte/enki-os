@@ -68,7 +68,7 @@ $(OBJ_DIR)/%.o: %.cpp
 
 all:	build
 
-build:	clean $(TARGET) img mount unmount
+build:	clean $(TARGET) img userspace mount unmount
 
 clean:
 	rm -rf $(BIN_DIR)/* $(OBJ_DIR)/*
@@ -79,6 +79,9 @@ img:
 	dd if=$(BIN_DIR)/kernel.bin status=none >> $(BIN_DIR)/os.bin
 	dd if=/dev/zero bs=1048576 count=16 status=none>> $(BIN_DIR)/os.bin
 
+userspace:	.FORCE
+	$(MAKE) -C userspace/nothing all
+
 qemu:	build
 	$(QEMU) $(QEMU_FLAGS) -monitor stdio
 
@@ -86,6 +89,7 @@ mount:
 	@sudo mkdir -p /mnt/$(OS)
 	@sudo mount -t vfat $(BIN_DIR)/os.bin /mnt/$(OS)
 	@sudo cp hello.txt /mnt/$(OS)
+	@sudo cp userspace/nothing/bin/nothing.bin /mnt/$(OS)
 
 unmount:
 	@sudo umount /mnt/$(OS)

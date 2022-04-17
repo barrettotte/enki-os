@@ -10,7 +10,10 @@
 #include "memory/heap/kheap.h"
 #include "memory/memory.h"
 #include "memory/paging/paging.h"
+#include "status.h"
 #include "string/string.h"
+#include "task/task.h"
+#include "task/process.h"
 #include "task/tss.h"
 
 #include <stddef.h>
@@ -117,20 +120,28 @@ void kernel_main() {
     // paging
     uint8_t paging_flags = PAGING_IS_WRITEABLE | PAGING_IS_PRESENT | PAGING_ACCESS_FROM_ALL;
     kernel_chunk = paging_new_4gb(paging_flags);
-    paging_switch(paging_4gb_chunk_get_directory(kernel_chunk));
+    paging_switch(kernel_chunk);
     enable_paging();
 
-    enable_interrupts();
+    // test process
+    struct process* process = 0;
+    int status = process_load("0:/nothing.bin", &process);
+    if (status != OK) {
+        panic("Failed to load nothing.bin\n");
+    }
+    task_run_first();
+
+    // enable_interrupts();
 
     // test FAT16 file open
-    int fd = fopen("0:/hello.txt", "r");
-    if (fd) {
-        print("opened 0:/hello.txt\n");
-        struct file_stat s;
-        fstat(fd, &s);
-        fclose(fd);
-        print("closed 0:/hello.txt\n");
-    }
+    // int fd = fopen("0:/hello.txt", "r");
+    // if (fd) {
+    //     print("opened 0:/hello.txt\n");
+    //     struct file_stat s;
+    //     fstat(fd, &s);
+    //     fclose(fd);
+    //     print("closed 0:/hello.txt\n");
+    // }
 
     print("\nend of kernel_main() reached\n");
 }

@@ -16,6 +16,9 @@ struct process {
     uint32_t size;  // size of process memory
 };
 
+// load a process into an open slot
+int process_load(const char* file_name, struct process** process);
+
 // load file as process into slot
 int process_load_for_slot(const char* file_name, struct process** process, int process_slot);
 

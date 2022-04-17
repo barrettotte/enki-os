@@ -73,7 +73,7 @@ int process_map_bin(struct process* process) {
     int result = 0;
     uint32_t flags = PAGING_IS_PRESENT | PAGING_ACCESS_FROM_ALL | PAGING_IS_WRITEABLE;
 
-    paging_map_to(process->task->page_dir->directory_entry, (void*) ENKI_PGM_VIRT_ADDR, 
+    paging_map_to(process->task->page_dir, (void*) ENKI_PGM_VIRT_ADDR, 
         process->addr, paging_align_address(process->addr + process->size), flags);
     return result;
 }
@@ -95,7 +95,6 @@ int process_get_free_slot() {
     return -EISTKN; // no open slots
 }
 
-// load a process into an open slot
 int process_load(const char* file_name, struct process** process) {
     int result = 0;
     int slot = process_get_free_slot();
@@ -145,6 +144,7 @@ int process_load_for_slot(const char* file_name, struct process** process, int p
     task = task_new(load_proc);
     if (ERROR_I(task) == 0) {
         result = ERROR_I(task);
+        goto out;
     }
     load_proc->task = task;
 

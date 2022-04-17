@@ -47,6 +47,7 @@ sudo dd if=boot.bin of=/dev/sdb   # overwrite USB's first sector with our bootlo
   - `io` to `cpu/`
   - `string` to `stdlib/`
   - `kernel.*` to `kernel/`
+- TODO: userspace program makefile hardcoded arch/fmt
 
 ## References
 

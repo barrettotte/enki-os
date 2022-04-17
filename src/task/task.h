@@ -42,4 +42,22 @@ int task_free(struct task* task);
 // create a new task
 struct task* task_new(struct process* process);
 
+// switch to task 
+int task_switch(struct task* task);
+
+// leave kernel page directory and load task page directory
+int task_page();
+
+// run very first task
+void task_run_first();
+
+// drop into userland
+void task_return(struct registers* regs);
+
+// restore general purpose registers
+void restore_gpr(struct registers* regs);
+
+// change all segment registers to user data segment registers
+void user_registers();
+
 #endif

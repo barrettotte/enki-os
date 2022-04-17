@@ -28,7 +28,7 @@ void paging_free_4gb(struct paging_4gb_chunk* chunk);
 uint32_t* paging_4gb_chunk_get_directory(struct paging_4gb_chunk* chunk);
 
 // switch page directory
-void paging_switch(uint32_t* directory);
+void paging_switch(struct paging_4gb_chunk* directory);
 
 // check if address is page-aligned
 bool paging_is_aligned(void* addr);
@@ -44,13 +44,13 @@ int paging_get_indices(void* virt_addr, uint32_t* dir_idx_out, uint32_t* table_i
 void* paging_align_address(void* addr);
 
 //
-int paging_map(uint32_t* dir, void* virt_addr, void* phys_addr, int flags);
+int paging_map(struct paging_4gb_chunk* dir, void* virt_addr, void* phys_addr, int flags);
 
 //
-int paging_map_range(uint32_t* dir, void* virt_addr, void* phys_addr, int page_count, int flags);
+int paging_map_range(struct paging_4gb_chunk* dir, void* virt_addr, void* phys_addr, int page_count, int flags);
 
 //
-int paging_map_to(uint32_t* dir, void* virt_addr, void* phys_addr, void* phys_end, int flags);
+int paging_map_to(struct paging_4gb_chunk* dir, void* virt_addr, void* phys_addr, void* phys_end, int flags);
 
 // set page table entry
 int paging_set(uint32_t* directory, void* virt_addr, uint32_t val);

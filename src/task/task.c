@@ -52,6 +52,7 @@ int task_init(struct task* task, struct process* process) {
     }
     task->registers.ip = ENKI_PGM_VIRT_ADDR;
     task->registers.ss = USER_DATA_SEG;
+    task->registers.cs = USER_CODE_SEG;
     task->registers.esp = ENKI_PGM_VIRT_STACK_ADDR_START;
     task->process = process;
 
@@ -60,6 +61,7 @@ int task_init(struct task* task, struct process* process) {
 
 struct task* task_new(struct process* process) {
     int result = 0;
+
     struct task* task = kzalloc(sizeof(struct task));
     if (!task) {
         result = -ENOMEM;
@@ -70,9 +72,10 @@ struct task* task_new(struct process* process) {
         goto out;
     }
 
-    if (!task_head) {
+    if (task_head == 0) {
         task_head = task;
         task_tail = task;
+        task_current = task;
         goto out;
     }
     task_tail->next = task;
@@ -85,4 +88,24 @@ out:
         return ERROR(result);
     }
     return task;
+}
+
+int task_switch(struct task* task) {
+    task_current = task;
+    paging_switch(task->page_dir);
+    return 0;
+}
+
+int task_page() {
+    user_registers();
+    task_switch(task_current);
+    return 0;
+}
+
+void task_run_first() {
+    if (!task_current) {
+        panic("task_run_first(): No current task\n");
+    }
+    task_switch(task_head);
+    task_return(&task_head->registers);
 }
