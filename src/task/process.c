@@ -82,6 +82,15 @@ int process_map_bin(struct process* process) {
 int process_map_memory(struct process* process) {
     int result = 0;
     result = process_map_bin(process);
+    if (result < 0) {
+        goto out;
+    }
+
+    // setup program stack
+    uint32_t flags = PAGING_IS_PRESENT | PAGING_ACCESS_FROM_ALL | PAGING_IS_WRITEABLE;
+    paging_map_to(process->task->page_dir, (void*) ENKI_PGM_VIRT_STACK_ADDR_END, process->stack, 
+        paging_align_address(process->stack + ENKI_USER_PGM_STACK_SIZE), flags);
+out:
     return result;
 }
 

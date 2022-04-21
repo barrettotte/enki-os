@@ -52,7 +52,10 @@ int paging_map_range(struct paging_4gb_chunk* dir, void* virt_addr, void* phys_a
 //
 int paging_map_to(struct paging_4gb_chunk* dir, void* virt_addr, void* phys_addr, void* phys_end, int flags);
 
-// set page table entry
-int paging_set(uint32_t* directory, void* virt_addr, uint32_t val);
+// set page table entry at virtual address
+int paging_set(uint32_t* dir, void* virt_addr, uint32_t val);
+
+// get page table entry from virtual address
+uint32_t paging_get(uint32_t* dir, void* virt_addr);
 
 #endif

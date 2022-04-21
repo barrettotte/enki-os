@@ -48,6 +48,9 @@ sudo dd if=boot.bin of=/dev/sdb   # overwrite USB's first sector with our bootlo
   - `string` to `stdlib/`
   - `kernel.*` to `kernel/`
 - TODO: userspace program makefile hardcoded arch/fmt
+- TODO: rename `isr_80h` to `syscall`?
+  - move `idt.c` `isr_80h` commands to `syscall`
+  - move `isr_80h` subroutines in `idt.asm` into `syscall.asm`
 
 ## References
 

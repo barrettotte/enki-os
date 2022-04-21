@@ -6,6 +6,9 @@
 
 #include <stdint.h>
 
+struct interrupt_frame;
+typedef void*(*ISR_80H_CMD)(struct interrupt_frame* frame);
+
 // IDT entry
 struct idt_entry {
     uint16_t base_low;   // offset bits 0-15 - lower part of interrupt function offset address
@@ -25,11 +28,33 @@ struct idtr_ptr {
     uint32_t base;   // base address of IDT
 } __attribute__((packed));
 
+// interrupt frame for invoking interrupt 0x80 (syscall)
+struct interrupt_frame {
+    uint32_t edi;
+    uint32_t esi;
+    uint32_t ebp;
+    uint32_t reserved;  // stack pointer from pushad, disregard
+    uint32_t ebx;
+    uint32_t edx;
+    uint32_t ecx;
+    uint32_t eax;
+    uint32_t ip;
+    uint32_t cs;
+    uint32_t flags;
+    uint32_t esp;
+    uint32_t ss;
+} __attribute__((packed));
+
 // setup IDT
 void idt_init();
 
+// register a new system call
+void isr_80h_register_cmd(int cmd_idx, ISR_80H_CMD cmd_fn);
+
+//
 void enable_interrupts();
 
+//
 void disable_interrupts();
 
 #endif

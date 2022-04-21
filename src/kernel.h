@@ -11,10 +11,16 @@
 // halt kernel and display panic message
 void panic(const char* msg);
 
+// switch to kernel page directory and kernel data segment
+void kernel_page();
+
 // kernel entry
 void kernel_main();
 
 // print string to terminal
 void print(const char* s);
+
+// switch to kernel data segment
+void kernel_registers();
 
 #endif

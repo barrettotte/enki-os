@@ -1,7 +1,7 @@
         bits 32                             ; protected mode
 
-        global _start                       ; export symbol
-        global test_div0                    ; TODO: remove
+        global _start                       ;
+        global kernel_registers             ;
 
         extern kernel_main                  ;
 
@@ -37,8 +37,12 @@ _start:                                     ;
 .end:                                       ;
         jmp $                               ; hang
 
-test_div0:                                  ; TODO: this is a test, remove it!
-        mov eax, 0
-        div eax
+kernel_registers:                           ; ***** switch to kernel's data segment *****
+        mov ax, 0x10                        ; kernel data segment
+        mov ds, ax                          ; set data segment
+        mov es, ax                          ; set extra segment
+        mov gs, ax                          ; set extra segment
+        mov fs, ax                          ; set extra segment
+        ret                                 ; end kernel_registers subroutine
 
         times 512 - ($ - $$) db 0x0         ; pad rest of sector (16-bit align too)

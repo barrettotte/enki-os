@@ -7,6 +7,7 @@
 #include "fs/path.h"
 #include "fs/file.h"
 #include "gdt/gdt.h"
+#include "isr_80h/isr_80h.h"
 #include "memory/heap/kheap.h"
 #include "memory/memory.h"
 #include "memory/paging/paging.h"
@@ -86,6 +87,11 @@ void panic(const char* msg) {
     while(1) {}
 }
 
+void kernel_page() {
+    kernel_registers();
+    paging_switch(kernel_chunk);
+}
+
 struct tss tss;
 struct gdt gdt_real[ENKI_TOTAL_GDT_SEGMENTS];
 struct gdt_structured gdt_structured[ENKI_TOTAL_GDT_SEGMENTS] = {
@@ -123,12 +129,16 @@ void kernel_main() {
     paging_switch(kernel_chunk);
     enable_paging();
 
+    isr_80h_register_cmds();
+
     // test process
     struct process* process = 0;
     int status = process_load("0:/nothing.bin", &process);
     if (status != OK) {
         panic("Failed to load nothing.bin\n");
     }
+
+    print("Entering first task...\n");
     task_run_first();
 
     // enable_interrupts();

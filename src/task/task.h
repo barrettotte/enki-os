@@ -20,6 +20,7 @@ struct registers {
     uint32_t ss;
 };
 
+struct interrupt_frame;
 struct process;
 
 struct task {
@@ -48,8 +49,20 @@ int task_switch(struct task* task);
 // leave kernel page directory and load task page directory
 int task_page();
 
+// switch to given task's page directory
+int task_page_to(struct task* task);
+
 // run very first task
 void task_run_first();
+
+//
+void task_current_save_state(struct interrupt_frame* frame);
+
+// copy string from task to
+int copy_str_from_task(struct task* task, void* virt_addr, void* phys_addr, int max);
+
+// fetch an item from task's stack
+void* task_get_stack_item(struct task* task, int idx);
 
 // drop into userland
 void task_return(struct registers* regs);
