@@ -2,7 +2,8 @@
 #define ISR_80H_H
 
 enum SystemCalls {
-    SYSCALL_0_SUM
+    SYSCALL_0_SUM,
+    SYSCALL_1_PRINT,
 };
 
 // register all system calls

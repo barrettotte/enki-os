@@ -3,24 +3,33 @@
 #include "../kernel.h"
 #include "../io/io.h"
 #include "../memory/memory.h"
+#include "../status.h"
 #include "../task/task.h"
 
 struct idt_entry idt_entries[ENKI_TOTAL_INTERRUPTS];
 struct idtr_ptr idtr;
 
+extern void* interrupt_ptr_table[ENKI_TOTAL_INTERRUPTS];
 extern void idt_load(struct idtr_ptr* ptr);
 extern void no_interrupt();
 extern void int_21h();
 extern void isr_80h_wrapper();
 
+static INTERRUPT_CALLBACK_FN int_callbacks[ENKI_TOTAL_INTERRUPTS];
 static ISR_80H_CMD isr_80h_cmds[ENKI_MAX_ISR_80H_CMD];
 
-void int_21h_handler() {
-    print("Keyboard pressed\n");
+void no_interrupt_handler() {
     outb(0x20, 0x20);  // relay to PIC
 }
 
-void no_interrupt_handler() {
+// entry point for handling all interrupts
+void interrupt_handler(int interrupt, struct  interrupt_frame* frame) {
+    kernel_page();
+    if (int_callbacks[interrupt] != 0) {
+        task_current_save_state(frame);
+        int_callbacks[interrupt](frame);
+    }
+    task_page();
     outb(0x20, 0x20);  // relay to PIC
 }
 
@@ -43,16 +52,24 @@ void idt_init() {
     idtr.limit = sizeof(idt_entries) - 1;
     idtr.base = (uint32_t) idt_entries;
 
-    // set interrupts
+    // init interrupts
     for (int i = 0; i < ENKI_TOTAL_INTERRUPTS; i++) {
-        idt_set(i, no_interrupt);
+        idt_set(i, interrupt_ptr_table[i]);
     }
 
+    // override interrupts
     idt_set(0x0, idt_zero);
-    idt_set(0x21, int_21h);
     idt_set(0x80, isr_80h_wrapper);
 
     idt_load(&idtr);
+}
+
+int idt_register_int_callback(int interrupt, INTERRUPT_CALLBACK_FN callback) {
+    if (interrupt < 0 || interrupt >= ENKI_TOTAL_INTERRUPTS) {
+        return -EINVARG;
+    }
+    int_callbacks[interrupt] = callback;
+    return OK;
 }
 
 void isr_80h_register_cmd(int cmd_idx, ISR_80H_CMD cmd_fn) {

@@ -8,6 +8,7 @@
 #include "fs/file.h"
 #include "gdt/gdt.h"
 #include "isr_80h/isr_80h.h"
+#include "keyboard/keyboard.h"
 #include "memory/heap/kheap.h"
 #include "memory/memory.h"
 #include "memory/paging/paging.h"
@@ -131,14 +132,16 @@ void kernel_main() {
 
     isr_80h_register_cmds();
 
+    keyboard_init();
+
     // test process
     struct process* process = 0;
-    int status = process_load("0:/nothing.bin", &process);
+    int status = process_load_switch("0:/nothing.bin", &process);
     if (status != OK) {
         panic("Failed to load nothing.bin\n");
     }
 
-    print("Entering first task...\n");
+    print("Entering first task...\n\n");
     task_run_first();
 
     // enable_interrupts();

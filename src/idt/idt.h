@@ -8,6 +8,7 @@
 
 struct interrupt_frame;
 typedef void*(*ISR_80H_CMD)(struct interrupt_frame* frame);
+typedef void(*INTERRUPT_CALLBACK_FN)();
 
 // IDT entry
 struct idt_entry {
@@ -48,7 +49,10 @@ struct interrupt_frame {
 // setup IDT
 void idt_init();
 
-// register a new system call
+// register new interrupt callback
+int idt_register_int_callback(int interrupt, INTERRUPT_CALLBACK_FN callback);
+
+// register new system call
 void isr_80h_register_cmd(int cmd_idx, ISR_80H_CMD cmd_fn);
 
 //

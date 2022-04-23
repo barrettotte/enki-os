@@ -5,12 +5,12 @@
         global disable_interrupts           ;
         global idt_load                     ;
         global no_interrupt                 ;
-        global int_21h                      ;
         global isr_80h_wrapper              ;
+        global interrupt_ptr_table          ;
 
-        extern int_21h_handler              ;
         extern no_interrupt_handler         ;
         extern isr_80h_handler              ;
+        extern interrupt_handler            ;
 
 enable_interrupts:                          ; ***** enable interrupts *****
         sti                                 ;
@@ -37,11 +37,28 @@ no_interrupt:                               ; ***** no interrupt *****
         popad                               ; restore GPRs
         iret                                ; end no_interrupt subroutine; return from interrupt
 
-int_21h:                                    ; ***** TODO: *****
-        pushad                              ; store all GPRs
-        call int_21h_handler                ;
-        popad                               ; restore GPRs
-        iret                                ; return from interrupt; end int_21h subroutine
+; generically create an interrupt
+%macro interrupt 1
+        global int%1                        ; export interrupt
+  int%1:                                    ; ***** interrupt *****
+                                            ; start interrupt frame
+                                            ;   processor pushes on entry: dword ip, cs, flags, sp, ss
+        pushad                              ;   save general purpose registers
+                                            ; end interrupt frame
+        push esp                            ; save stack pointer
+        push dword %1                       ; push interrupt number
+        call interrupt_handler              ; handle the interrupt (in C)
+        add esp, 8                          ; restore stack pointer (two args = 8 bytes)
+        popad                               ; restore general purpose registers
+        iret                                ; end of interrupt subroutine; return from interrupt
+%endmacro
+
+; create all interrupts
+%assign i 0
+%rep 512
+  interrupt i
+  %assign i i+1
+%endrep
 
 isr_80h_wrapper:                            ; ***** Interrupt 0x80 wrapper *****
                                             ; start of interrupt frame
@@ -61,3 +78,17 @@ isr_80h_wrapper:                            ; ***** Interrupt 0x80 wrapper *****
         section .data                       ;
 
 kernel_result: dd 0                         ; temporary storage for kernel 0x80 interrupt result
+
+interrupt_ptr_table:                        ; table of pointers to interrupt routines
+
+; add pointer to interrupt routine
+%macro int_arr_entry 1
+  dd int%1
+%endmacro
+
+; add pointers for all interrupts
+%assign i 0
+  %rep 512
+  int_arr_entry i
+  %assign i i+1
+%endrep

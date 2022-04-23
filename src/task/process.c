@@ -12,11 +12,10 @@ struct process* process_current = 0;
 static struct process* processes[ENKI_MAX_PROCESSES] = {};
 
 // initialize a process
-static void process_init(struct process* process) {
-    memset(process, 0, sizeof(struct process));
+static void process_init(struct process* proc) {
+    memset(proc, 0, sizeof(struct process));
 }
 
-// fetch current process
 struct process* process_get_current() {
     return process_current;
 }
@@ -28,9 +27,14 @@ struct process* process_get(int id) {
     return processes[id];
 }
 
+int process_switch(struct process* proc) {
+    process_current = proc;
+    return OK;
+}
+
 // load binary file
-static int process_load_bin(const char* file_name, struct process* process) {
-    int result = 0;
+static int process_load_bin(const char* file_name, struct process* proc) {
+    int result = OK;
     int fd = fopen(file_name, "r");
     if (!fd) {
         result = -EIO;
@@ -54,42 +58,42 @@ static int process_load_bin(const char* file_name, struct process* process) {
         goto out;
     }
 
-    process->addr = pgm_data;
-    process->size = stat.file_size;
+    proc->addr = pgm_data;
+    proc->size = stat.file_size;
 out:
     fclose(fd);
     return result;
 }
 
 // load data for process
-static int process_load_data(const char* file_name, struct process* process) {
-    int result = 0;
-    result = process_load_bin(file_name, process);
+static int process_load_data(const char* file_name, struct process* proc) {
+    int result = OK;
+    result = process_load_bin(file_name, proc);
     return result;
 }
 
 //
-int process_map_bin(struct process* process) {
-    int result = 0;
+int process_map_bin(struct process* proc) {
+    int result = OK;
     uint32_t flags = PAGING_IS_PRESENT | PAGING_ACCESS_FROM_ALL | PAGING_IS_WRITEABLE;
 
-    paging_map_to(process->task->page_dir, (void*) ENKI_PGM_VIRT_ADDR, 
-        process->addr, paging_align_address(process->addr + process->size), flags);
+    paging_map_to(proc->task->page_dir, (void*) ENKI_PGM_VIRT_ADDR, 
+        proc->addr, paging_align_address(proc->addr + proc->size), flags);
     return result;
 }
 
 // map process to virtual addresses of page tables
-int process_map_memory(struct process* process) {
-    int result = 0;
-    result = process_map_bin(process);
+int process_map_memory(struct process* proc) {
+    int result = OK;
+    result = process_map_bin(proc);
     if (result < 0) {
         goto out;
     }
 
     // setup program stack
     uint32_t flags = PAGING_IS_PRESENT | PAGING_ACCESS_FROM_ALL | PAGING_IS_WRITEABLE;
-    paging_map_to(process->task->page_dir, (void*) ENKI_PGM_VIRT_STACK_ADDR_END, process->stack, 
-        paging_align_address(process->stack + ENKI_USER_PGM_STACK_SIZE), flags);
+    paging_map_to(proc->task->page_dir, (void*) ENKI_PGM_VIRT_STACK_ADDR_END, proc->stack, 
+        paging_align_address(proc->stack + ENKI_USER_PGM_STACK_SIZE), flags);
 out:
     return result;
 }
@@ -104,25 +108,33 @@ int process_get_free_slot() {
     return -EISTKN; // no open slots
 }
 
-int process_load(const char* file_name, struct process** process) {
-    int result = 0;
+int process_load(const char* file_name, struct process** proc) {
+    int result = OK;
     int slot = process_get_free_slot();
     if (slot < 0) {
         result = -EISTKN;
         goto out;
     }
-    result = process_load_for_slot(file_name, process, slot);
+    result = process_load_slot(file_name, proc, slot);
 out:
     return result;
 }
 
-int process_load_for_slot(const char* file_name, struct process** process, int process_slot) {
-    int result = 0;
+int process_load_switch(const char* file_name, struct process** proc) {
+    int result = process_load(file_name, proc);
+    if (result == OK) {
+        process_switch(*proc);
+    }
+    return result;
+}
+
+int process_load_slot(const char* file_name, struct process** proc, int proc_slot) {
+    int result = OK;
     struct task* task = 0;
     struct process* load_proc;
     void* pgm_stack_ptr = 0;
 
-    if (process_get(process_slot) != 0) {
+    if (process_get(proc_slot) != 0) {
         result = -EISTKN;
         goto out;
     }
@@ -147,7 +159,7 @@ int process_load_for_slot(const char* file_name, struct process** process, int p
     }
     load_proc->stack = pgm_stack_ptr;
     strncpy(load_proc->file_name, file_name, sizeof(load_proc->file_name));
-    load_proc->id = process_slot;
+    load_proc->id = proc_slot;
 
     // init task
     task = task_new(load_proc);
@@ -162,8 +174,8 @@ int process_load_for_slot(const char* file_name, struct process** process, int p
         goto out;
     }
 
-    *process = load_proc;
-    processes[process_slot] = load_proc;
+    *proc = load_proc;
+    processes[proc_slot] = load_proc;
     
 out:
     if (IS_ERR(result)) {

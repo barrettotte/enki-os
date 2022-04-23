@@ -1,7 +1,5 @@
 ; Enki OS Bootloader
-;
-; TODO: summary
-;
+
         org 0x7C00                          ; BIOS puts us here
         bits 16                             ; real mode
 
@@ -158,8 +156,6 @@ ata_lba_read:                               ; ***** ATA LBA Read *****
         loop .next_sector                   ; while (sector_count < total_sectors)
         ret                                 ; end of ata_lba_read subroutine
 
-.end:                                       ;
-        jmp $                               ; hang
                                             ; ***** complete boot sector *****
               times 510 - ($ - $$) db 0x0   ; pad rest of boot sector
               dw 0xAA55                     ; magic numbers; boot record signature
