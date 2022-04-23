@@ -44,7 +44,7 @@ void keyboard_backspace(struct process* proc) {
 
 void keyboard_push(char c) {
     struct process* proc = process_get_current();
-    if (!proc) {
+    if (!proc || c == 0x00) {
         return;
     }
     int idx = keyboard_get_tail_idx(proc);
@@ -61,7 +61,7 @@ char keyboard_pop() {
     
     char c = proc->keyboard.buffer[idx];
     if (c == 0x00) {
-        return 0;
+        return 0; // end of buffer
     }
     proc->keyboard.buffer[idx] = 0;
     proc->keyboard.head++;

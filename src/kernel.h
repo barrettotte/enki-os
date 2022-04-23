@@ -8,6 +8,9 @@
 #define ERROR_I(val) (int)(val)
 #define IS_ERR(val) ((int) val < 0)
 
+// write character to current terminal position
+void tty_writechar(char c, char color);
+
 // halt kernel and display panic message
 void panic(const char* msg);
 

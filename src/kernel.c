@@ -26,57 +26,63 @@ uint16_t tty_row = 0;
 uint16_t tty_col = 0;
 
 // build video memory entry for terminal character
-uint16_t tty_newchar(char c, char color)
-{
+uint16_t tty_newchar(char c, char color) {
     return (color << 8) | c; // little endian
 }
 
 // place character at (x,y) in terminal
-void tty_putchar(int x, int y, char c, char color)
-{
+void tty_putchar(int x, int y, char c, char color) {
     video_mem[(y * VGA_WIDTH) + x] = tty_newchar(c, color);
 }
 
-// write character to current terminal position
-void tty_writechar(char c, char color)
-{
-    if (c == '\n')
-    {
+void tty_backspace() {
+    if (tty_row == 0 && tty_col == 0) {
+        return;
+    }
+    if (tty_col == 0) {
+        tty_row--;
+        tty_col = VGA_WIDTH;
+    }
+    tty_col--;
+    tty_writechar(' ', 15);
+    tty_col--;
+}
+
+void tty_writechar(char c, char color) {
+    if (c == '\n') {
         tty_row++;
         tty_col = 0;
         return;
+    } 
+    if (c == 0x08) {
+        tty_backspace();
+        return;
     }
+
     tty_putchar(tty_col, tty_row, c, color);
     tty_col++;
 
-    if (tty_col >= VGA_WIDTH)
-    {
+    if (tty_col >= VGA_WIDTH) {
         tty_col = 0;
         tty_row++;
     }
 }
 
 // initialize terminal
-void tty_init()
-{
+void tty_init() {
     video_mem = (uint16_t *)(0xB8000); // TODO: const?
     tty_row = 0;
     tty_col = 0;
 
-    for (int y = 0; y < VGA_HEIGHT; y++)
-    {
-        for (int x = 0; x < VGA_WIDTH; x++)
-        {
+    for (int y = 0; y < VGA_HEIGHT; y++) {
+        for (int x = 0; x < VGA_WIDTH; x++) {
             tty_putchar(x, y, ' ', 0);
         }
     }
 }
 
-void print(const char *s)
-{
-    int len = strlen(s);
-    for (int i = 0; i < len; i++)
-    {
+void print(const char *s) {
+    for (int i = 0; i < strlen(s); i++) {
         tty_writechar(s[i], 15);
     }
 }

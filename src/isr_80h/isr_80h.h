@@ -4,6 +4,8 @@
 enum SystemCalls {
     SYSCALL_0_SUM,
     SYSCALL_1_PRINT,
+    SYSCALL_2_GETKEY,
+    SYSCALL_3_PUTCHAR,
 };
 
 // register all system calls
