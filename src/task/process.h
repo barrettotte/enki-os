@@ -6,14 +6,26 @@
 
 #include <stdint.h>
 
+#define PROCESS_FILE_TYPE_ELF 0
+#define PROCESS_FILE_TYPE_BIN 1
+
+typedef unsigned char PROCESS_FILE_TYPE;
+
 struct process {
     uint16_t id;
     char file_name[ENKI_MAX_PATH];
     struct task* task;
     void* allocations[ENKI_MAX_PGM_ALLOCATIONS];
-    void* addr;     // process memory (code and data segments)
+    PROCESS_FILE_TYPE file_type;
+
+    union {
+        void* addr; // process memory (code and data segments)
+        struct elf_file* elf_file;
+    };
+
     void* stack;    // stack memory
     uint32_t size;  // size of process memory
+
     struct keyboard_buffer {
         char buffer[ENKI_KEYBOARD_BUFFER_SIZE];
         int tail;

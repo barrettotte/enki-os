@@ -142,9 +142,9 @@ void kernel_main() {
 
     // test process
     struct process* process = 0;
-    int status = process_load_switch("0:/nothing.bin", &process);
+    int status = process_load_switch("0:/nothing.elf", &process);
     if (status != OK) {
-        panic("Failed to load nothing.bin\n");
+        panic("Failed to load nothing.elf\n");
     }
 
     print("Entering first task...\n\n");

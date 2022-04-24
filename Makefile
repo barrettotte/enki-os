@@ -89,7 +89,7 @@ mount:
 	@sudo mkdir -p /mnt/$(OS)
 	@sudo mount -t vfat $(BIN_DIR)/os.bin /mnt/$(OS)
 	@sudo cp hello.txt /mnt/$(OS)
-	@sudo cp userspace/nothing/bin/nothing.bin /mnt/$(OS)
+	@sudo cp userspace/nothing/bin/nothing.elf /mnt/$(OS)
 
 unmount:
 	@sudo umount /mnt/$(OS)

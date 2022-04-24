@@ -1,4 +1,5 @@
 #include "../fs/file.h"
+#include "../loader/formats/elf_loader.h"
 #include "../memory/heap/kheap.h"
 #include "../memory/memory.h"
 #include "../memory/paging/paging.h"
@@ -32,6 +33,21 @@ int process_switch(struct process* proc) {
     return OK;
 }
 
+// load ELF file
+static int process_load_elf(const char* file_name, struct process* proc) {
+    int result = 0;
+    struct elf_file* elf_file = 0;
+
+    result = elf_load(file_name, &elf_file);
+    if (result < 0) {
+        goto out;
+    }
+    proc->file_type = PROCESS_FILE_TYPE_ELF;
+    proc->elf_file = elf_file;
+out:
+    return result;
+}
+
 // load binary file
 static int process_load_bin(const char* file_name, struct process* proc) {
     int result = OK;
@@ -58,6 +74,7 @@ static int process_load_bin(const char* file_name, struct process* proc) {
         goto out;
     }
 
+    proc->file_type = PROCESS_FILE_TYPE_BIN;
     proc->addr = pgm_data;
     proc->size = stat.file_size;
 out:
@@ -68,32 +85,58 @@ out:
 // load data for process
 static int process_load_data(const char* file_name, struct process* proc) {
     int result = OK;
-    result = process_load_bin(file_name, proc);
+    result = process_load_elf(file_name, proc);
+    if (result == -EINVFMT) {
+        result = process_load_bin(file_name, proc);
+    }
     return result;
 }
 
 //
-int process_map_bin(struct process* proc) {
-    int result = OK;
-    uint32_t flags = PAGING_IS_PRESENT | PAGING_ACCESS_FROM_ALL | PAGING_IS_WRITEABLE;
+static int process_map_bin(struct process* proc) {
+    uint32_t flags = PAGING_IS_PRESENT | PAGING_ACCESS_FROM_ALL | PAGING_IS_WRITEABLE;  // all writeable?
 
     paging_map_to(proc->task->page_dir, (void*) ENKI_PGM_VIRT_ADDR, 
         proc->addr, paging_align_address(proc->addr + proc->size), flags);
+    return OK;
+}
+
+//
+static int process_map_elf(struct process* proc) {
+    int result = OK;
+    struct elf_file* elf_file = proc->elf_file;
+
+    void* virt_addr = paging_align_to_lower(elf_virt_base(elf_file));
+    void* phys_end = paging_align_address(elf_phys_end(elf_file));
+    uint32_t flags = PAGING_IS_PRESENT | PAGING_ACCESS_FROM_ALL | PAGING_IS_WRITEABLE;  // all writeable?
+
+    result = paging_map_to(proc->task->page_dir, virt_addr, elf_phys_base(elf_file), phys_end, flags);
     return result;
 }
 
 // map process to virtual addresses of page tables
 int process_map_memory(struct process* proc) {
     int result = OK;
-    result = process_map_bin(proc);
+
+    switch(proc->file_type) {
+        case PROCESS_FILE_TYPE_BIN:
+            result = process_map_bin(proc);
+            break;
+        case PROCESS_FILE_TYPE_ELF:
+            result = process_map_elf(proc);
+            break;
+        default:
+            panic("process_map_memory: Invalid file type.\n");
+            break;
+    }
     if (result < 0) {
         goto out;
     }
 
     // setup program stack
     uint32_t flags = PAGING_IS_PRESENT | PAGING_ACCESS_FROM_ALL | PAGING_IS_WRITEABLE;
-    paging_map_to(proc->task->page_dir, (void*) ENKI_PGM_VIRT_STACK_ADDR_END, proc->stack, 
-        paging_align_address(proc->stack + ENKI_USER_PGM_STACK_SIZE), flags);
+    void* phys_end = paging_align_address(proc->stack + ENKI_USER_PGM_STACK_SIZE);
+    paging_map_to(proc->task->page_dir, (void*) ENKI_PGM_VIRT_STACK_ADDR_END, proc->stack, phys_end, flags);
 out:
     return result;
 }

@@ -14,7 +14,7 @@ TODO: add picture of Enki with link to wiki
 - [ ] Partial LibC
 - [ ] Userland with basic shell
 - [ ] Multitasking
-- [ ] Userland ELF loading
+- [ ] ELF file loading
 
 ## Building Locally
 
@@ -62,6 +62,13 @@ sudo dd if=boot.bin of=/dev/sdb   # overwrite USB's first sector with our bootlo
 - TODO: review https://wiki.osdev.org/Meaty_Skeleton
 - TODO: gather system info and print on startup
 
+## Limitations
+
+- ELF file loading loads entire file into heap memory...
+- Only supports loading static ELF files
+- Memory fragmentation TODO:
+- Lazy A20 line enable; Could potentially fail on some systems
+
 ## References
 
 - [OSDev.org](https://wiki.osdev.org/Main_Page)
@@ -70,4 +77,4 @@ sudo dd if=boot.bin of=/dev/sdb   # overwrite USB's first sector with our bootlo
 - [Ralf Brown Interrupt List](https://www.ctyme.com/rbrown.htm)
 - [Operating Systems: Three Easy Pieces](https://pages.cs.wisc.edu/~remzi/OSTEP/)
 - [PC Interrupts: A Programmer's Reference to BIOS, DOS, and Third-Party Calls](https://www.amazon.com/PC-Interrupts-Programmers-Reference-Third-Party/dp/0201624850)
-
+- [Executable and Linkable Format (ELF)](https://refspecs.linuxfoundation.org/elf/elf.pdf)

@@ -39,9 +39,11 @@ void enable_paging();
 // find directory index and table index for a virtual address
 int paging_get_indices(void* virt_addr, uint32_t* dir_idx_out, uint32_t* table_idx_out);
 
-//
-// align address to page size
+// align address to page
 void* paging_align_address(void* addr);
+
+// align address to lower page
+void* paging_align_to_lower(void* addr);
 
 //
 int paging_map(struct paging_4gb_chunk* dir, void* virt_addr, void* phys_addr, int flags);

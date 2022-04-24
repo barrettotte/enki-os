@@ -11,7 +11,7 @@ build:	clean
 	@mkdir -p build/
 	@mkdir -p bin/
 	$(AS) -f elf nothing.asm -o build/nothing.o
-	$(CC) -g -T linker.ld -o bin/nothing.bin -ffreestanding -O0 -nostdlib -fpic -g build/nothing.o
+	$(CC) -g -T linker.ld -o bin/nothing.elf -ffreestanding -O0 -nostdlib -fpic -g build/nothing.o
 
 clean:
 	@rm -rf build/* bin/*
