@@ -1,5 +1,6 @@
 #include "../kernel.h"
 #include "../idt/idt.h"
+#include "../loader/formats/elf_loader.h"
 #include "../memory/memory.h"
 #include "../memory/heap/kheap.h"
 #include "../memory/paging/paging.h"
@@ -45,18 +46,23 @@ int task_free(struct task* task) {
 }
 
 // initialize a task
-int task_init(struct task* task, struct process* process) {
+int task_init(struct task* task, struct process* proc) {
     memset(task, 0, sizeof(struct task));
-    task->page_dir = paging_new_4gb(PAGING_IS_PRESENT | PAGING_ACCESS_FROM_ALL); // TODO: secure (ALL=bad)
+    task->page_dir = paging_new_4gb(PAGING_IS_PRESENT | PAGING_ACCESS_FROM_ALL); // TODO: insecure (ALL=bad)
     
     if (!task->page_dir) {
         return -EIO;
     }
-    task->registers.ip = ENKI_PGM_VIRT_ADDR;
+
+    if (proc->file_type == PROCESS_FILE_TYPE_ELF) {
+        task->registers.ip = elf_header(proc->elf_file)->e_entry;
+    } else {
+        task->registers.ip = ENKI_PGM_VIRT_ADDR;
+    }
     task->registers.ss = USER_DATA_SEG;
     task->registers.cs = USER_CODE_SEG;
     task->registers.esp = ENKI_PGM_VIRT_STACK_ADDR_START;
-    task->process = process;
+    task->process = proc;
 
     return 0;
 }

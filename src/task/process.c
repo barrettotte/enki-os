@@ -92,7 +92,7 @@ static int process_load_data(const char* file_name, struct process* proc) {
     return result;
 }
 
-//
+// map binary file process to virtual addresses
 static int process_map_bin(struct process* proc) {
     uint32_t flags = PAGING_IS_PRESENT | PAGING_ACCESS_FROM_ALL | PAGING_IS_WRITEABLE;  // all writeable?
 
@@ -101,16 +101,29 @@ static int process_map_bin(struct process* proc) {
     return OK;
 }
 
-//
+// map ELF file process to virtual addresses
 static int process_map_elf(struct process* proc) {
     int result = OK;
     struct elf_file* elf_file = proc->elf_file;
+    struct elf_header* header = elf_header(elf_file);
+    struct elf32_phdr* phdrs = elf_pheader(header);
 
-    void* virt_addr = paging_align_to_lower(elf_virt_base(elf_file));
-    void* phys_end = paging_align_address(elf_phys_end(elf_file));
-    uint32_t flags = PAGING_IS_PRESENT | PAGING_ACCESS_FROM_ALL | PAGING_IS_WRITEABLE;  // all writeable?
+    for (int i = 0; i < header->e_phnum; i++) {
+        struct elf32_phdr* phdr = &phdrs[i];
 
-    result = paging_map_to(proc->task->page_dir, virt_addr, elf_phys_base(elf_file), phys_end, flags);
+        int flags = PAGING_IS_PRESENT | PAGING_ACCESS_FROM_ALL;
+        if (phdr->p_flags & PF_W) {
+            flags |= PAGING_IS_WRITEABLE;
+        }
+        void* virt_base = paging_align_to_lower((void*) phdr->p_vaddr);
+        void* phys_base = paging_align_to_lower(elf_phdr_phys_addr(elf_file, phdr));
+        void* phys_end = paging_align_address(phdr->p_paddr + phdr->p_filesz);
+
+        result = paging_map_to(proc->task->page_dir, virt_base, phys_base, phys_end, flags);
+        if (result < 0) {
+            break;
+        }
+    }
     return result;
 }
 

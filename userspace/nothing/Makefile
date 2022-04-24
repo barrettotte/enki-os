@@ -13,5 +13,8 @@ build:	clean
 	$(AS) -f elf nothing.asm -o build/nothing.o
 	$(CC) -g -T linker.ld -o bin/nothing.elf -ffreestanding -O0 -nostdlib -fpic -g build/nothing.o
 
+read_elf:	build
+	readelf -S bin/nothing.elf
+
 clean:
 	@rm -rf build/* bin/*

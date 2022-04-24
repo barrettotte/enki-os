@@ -11,10 +11,10 @@ TODO: add picture of Enki with link to wiki
 - [x] Custom bootloader
 - [x] FAT-16 file system
 - [x] Keyboard driver
+- [x] Static ELF file loading
 - [ ] Partial LibC
 - [ ] Userland with basic shell
 - [ ] Multitasking
-- [ ] ELF file loading
 
 ## Building Locally
 
