@@ -162,5 +162,5 @@ void kernel_main() {
     //     print("closed 0:/hello.txt\n");
     // }
 
-    print("\nend of kernel_main() reached\n");
+    // print("\nend of kernel_main() reached\n");
 }

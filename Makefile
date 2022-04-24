@@ -61,7 +61,7 @@ $(OBJ_DIR)/%.o: %.c
 
 $(OBJ_DIR)/%.o: %.cpp
 	@mkdir -p $(@D)
-	@echo "TODO: no C++ support. Cannot compile...yet" $<
+	@echo "No C++ support...unable to compile $<"
 
 .PHONY:	.FORCE
 .FORCE:
@@ -80,6 +80,7 @@ img:
 	dd if=/dev/zero bs=1048576 count=16 status=none>> $(BIN_DIR)/os.bin
 
 userspace:	.FORCE
+	$(MAKE) -C userspace/stdlib all
 	$(MAKE) -C userspace/nothing all
 
 qemu:	build
@@ -94,10 +95,16 @@ mount:
 unmount:
 	@sudo umount /mnt/$(OS)
 
-debug:	build
+debug_kernel:	build
 	@gdb -ex 'set confirm off' \
 		-ex 'add-symbol-file $(KERNEL_FULL) 0x100000' \
 		-ex 'break kernel_main' \
+		-ex 'target remote | $(QEMU) $(QEMU_FLAGS) -S -gdb stdio'
+
+debug_userspace:	build
+	@gdb -ex 'set confirm off' \
+		-ex 'add-symbol-file userspace/nothing/bin/nothing.elf 0x400000' \
+		-ex 'break main' \
 		-ex 'target remote | $(QEMU) $(QEMU_FLAGS) -S -gdb stdio'
 
 toolchain:

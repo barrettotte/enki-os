@@ -115,9 +115,10 @@ static int process_map_elf(struct process* proc) {
         if (phdr->p_flags & PF_W) {
             flags |= PAGING_IS_WRITEABLE;
         }
+        void* phdr_phys_addr = elf_phdr_phys_addr(elf_file, phdr);
         void* virt_base = paging_align_to_lower((void*) phdr->p_vaddr);
-        void* phys_base = paging_align_to_lower(elf_phdr_phys_addr(elf_file, phdr));
-        void* phys_end = paging_align_address(phdr->p_paddr + phdr->p_filesz);
+        void* phys_base = paging_align_to_lower(phdr_phys_addr);
+        void* phys_end = paging_align_address(phdr_phys_addr + phdr->p_memsz);
 
         result = paging_map_to(proc->task->page_dir, virt_base, phys_base, phys_end, flags);
         if (result < 0) {
@@ -241,4 +242,55 @@ out:
         // TODO: free process data
     }
     return result;
+}
+
+// find a free memory allocation for process
+static int process_find_free_alloc(struct process* proc) {
+    for (int i = 0; i < ENKI_MAX_PGM_ALLOCATIONS; i++) {
+        if (proc->allocations[i] == 0) {
+            return i;
+        }
+    }
+    return -ENOMEM;
+}
+
+void* process_malloc(struct process* proc, size_t size) {
+    void* mem = kzalloc(size);
+    if (!mem) {
+        return 0;
+    }
+
+    int idx = process_find_free_alloc(proc);
+    if (idx < 0) {
+        return 0;
+    }
+    proc->allocations[idx] = mem;
+    return mem;
+}
+
+// check if given process owns the provided pointer
+static bool process_owns_ptr(struct process* proc, void* ptr) {
+    for (int i = 0; i < ENKI_MAX_PGM_ALLOCATIONS; i++) {
+        if (proc->allocations[i] == ptr) {
+            return true;
+        }
+    }
+    return false;
+}
+
+// drop allocation entry from processe's allocation table
+static void process_allocation_drop(struct process* proc, void* ptr) {
+    for (int i = 0; i < ENKI_MAX_PGM_ALLOCATIONS; i++) {
+        if (proc->allocations[i] == ptr) {
+            proc->allocations[i] = 0x00;
+        }
+    }
+}
+
+void process_free(struct process* proc, void* to_free) {
+    if (!process_owns_ptr(proc, to_free)) {
+        return;
+    }
+    process_allocation_drop(proc, to_free);
+    kfree(to_free);
 }

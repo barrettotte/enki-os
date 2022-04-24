@@ -1,4 +1,5 @@
 #include "../idt/idt.h"
+#include "heap.h"
 #include "isr_80h.h"
 #include "io.h"
 #include "misc.h"
@@ -8,4 +9,6 @@ void isr_80h_register_cmds() {
     isr_80h_register_cmd(SYSCALL_1_PRINT, isr_80h_cmd1_print);
     isr_80h_register_cmd(SYSCALL_2_GETKEY, isr_80h_cmd2_getkey);
     isr_80h_register_cmd(SYSCALL_3_PUTCHAR, isr_80h_cmd3_putchar);
+    isr_80h_register_cmd(SYSCALL_4_MALLOC, isr_80h_cmd4_malloc);
+    isr_80h_register_cmd(SYSCALL_5_FREE, isr_80h_cmd5_free);
 }

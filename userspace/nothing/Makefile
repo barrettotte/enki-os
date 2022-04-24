@@ -1,5 +1,23 @@
-CC := $(HOME)/opt/cross/bin/i686-elf-gcc
-AS := nasm
+ARCH := i686
+FMT  := elf
+
+BIN_DIR := bin
+OBJ_DIR := build
+SRC_DIR := .
+
+STDLIB := ../stdlib/src
+TARGET := nothing
+
+CROSS := "$(HOME)/opt/cross/bin/$(ARCH)-$(FMT)"
+
+CC := $(CROSS)-gcc
+CC_INCLUDES := $(STDLIB)
+CC_FLAGS := -g -ffreestanding \
+			-falign-jumps -falign-functions -falign-labels -falign-loops \
+			-fstrength-reduce -fomit-frame-pointer -finline-functions -fno-builtin \
+			-Werror -Wno-unused-function -Wno-unused-label -Wno-cpp -Wno-unused-parameter \
+			-nostdlib -nostartfiles -nodefaultlibs \
+			-Wall -O0
 
 .PHONY:	.FORCE
 .FORCE:
@@ -7,14 +25,15 @@ AS := nasm
 all:	build
 
 build:	clean
-	@echo "building nothing..."
-	@mkdir -p build/
-	@mkdir -p bin/
-	$(AS) -f elf nothing.asm -o build/nothing.o
-	$(CC) -g -T linker.ld -o bin/nothing.elf -ffreestanding -O0 -nostdlib -fpic -g build/nothing.o
+	@echo "building $(TARGET)..."
+	@mkdir -p $(OBJ_DIR)/
+	@mkdir -p $(BIN_DIR)/
+	$(CC) -I $(CC_INCLUDES) $(CC_FLAGS) -std=gnu99 -c $(TARGET).c -o $(OBJ_DIR)/$(TARGET).o
+	$(CC) -g -T linker.ld -o $(BIN_DIR)/$(TARGET).elf -ffreestanding -O0 -nostdlib -fpic -g \
+		$(OBJ_DIR)/$(TARGET).o ../stdlib/bin/stdlib.elf
 
 read_elf:	build
-	readelf -S bin/nothing.elf
+	readelf -a $(BIN_DIR)/$(TARGET).elf
 
 clean:
-	@rm -rf build/* bin/*
+	@rm -rf $(OBJ_DIR)/* $(BIN_DIR)/*

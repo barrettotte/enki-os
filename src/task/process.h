@@ -4,6 +4,7 @@
 #include "../config.h"
 #include "task.h"
 
+#include <stdbool.h>
 #include <stdint.h>
 
 #define PROCESS_FILE_TYPE_ELF 0
@@ -14,9 +15,9 @@ typedef unsigned char PROCESS_FILE_TYPE;
 struct process {
     uint16_t id;
     char file_name[ENKI_MAX_PATH];
+    PROCESS_FILE_TYPE file_type;
     struct task* task;
     void* allocations[ENKI_MAX_PGM_ALLOCATIONS];
-    PROCESS_FILE_TYPE file_type;
 
     union {
         void* addr; // process memory (code and data segments)
@@ -50,5 +51,11 @@ int process_load_switch(const char* file_name, struct process** proc);
 
 // load file as process into slot
 int process_load_slot(const char* file_name, struct process** proc, int proc_slot);
+
+// allocate memory for given process
+void* process_malloc(struct process* proc, size_t size);
+
+// free memory in given process
+void process_free(struct process* proc, void* to_free);
 
 #endif
