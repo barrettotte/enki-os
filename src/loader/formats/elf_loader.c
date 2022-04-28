@@ -1,7 +1,6 @@
 #include "../../config.h"
 #include "../../fs/file.h"
 #include "../../kernel.h"
-#include "../../memory/memory.h"
 #include "../../memory/heap/kheap.h"
 #include "../../memory/paging/paging.h"
 #include "../../status.h"

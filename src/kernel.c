@@ -10,7 +10,6 @@
 #include "isr_80h/isr_80h.h"
 #include "keyboard/keyboard.h"
 #include "memory/heap/kheap.h"
-#include "memory/memory.h"
 #include "memory/paging/paging.h"
 #include "status.h"
 #include "string/string.h"

@@ -3,6 +3,10 @@
 
 #include <stddef.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 // allocate heap memory
 void* malloc(size_t size);
 
@@ -11,5 +15,9 @@ void free(void* ptr);
 
 // convert integer to string
 char* itoa(int i);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

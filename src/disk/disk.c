@@ -1,5 +1,5 @@
 #include "../io/io.h"
-#include "../memory/memory.h"
+#include "../string/string.h"
 #include "../config.h"
 #include "../status.h"
 #include "disk.h"

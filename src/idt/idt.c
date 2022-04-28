@@ -2,8 +2,8 @@
 #include "../config.h"
 #include "../kernel.h"
 #include "../io/io.h"
-#include "../memory/memory.h"
 #include "../status.h"
+#include "../string/string.h"
 #include "../task/task.h"
 
 struct idt_entry idt_entries[ENKI_TOTAL_INTERRUPTS];

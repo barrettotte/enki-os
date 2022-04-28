@@ -1,7 +1,6 @@
 #include "../kernel.h"
 #include "../idt/idt.h"
 #include "../loader/formats/elf_loader.h"
-#include "../memory/memory.h"
 #include "../memory/heap/kheap.h"
 #include "../memory/paging/paging.h"
 #include "../status.h"

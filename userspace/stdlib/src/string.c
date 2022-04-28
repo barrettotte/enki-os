@@ -18,16 +18,6 @@ int strnlen(const char* s, int n) {
     return i;
 }
 
-int strnlen_until(const char* s, int n, char terminator) {
-    int i = 0;
-    for (i = 0; i < n; i++) {
-        if (s[i] == '\0' || s[i] == terminator) {
-            break;
-        }
-    }
-    return i;
-}
-
 int istrncmp(const char* s1, const char* s2, int n) {
     unsigned char c1, c2;
     while (n-- > 0) {

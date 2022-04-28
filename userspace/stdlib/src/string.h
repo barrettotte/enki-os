@@ -9,9 +9,6 @@ int strlen(const char* s);
 // calculate length of string up to n
 int strnlen(const char* s, int n);
 
-// read string until provided terminator or null terminator
-int strnlen_until(const char* s, int n, char terminator);
-
 // compare two strings insensitive
 int istrncmp(const char* s1, const char* s2, int n);
 

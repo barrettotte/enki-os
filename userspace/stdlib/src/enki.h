@@ -4,6 +4,10 @@
 #include <stdbool.h>
 #include <stddef.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 struct cmd_arg {
     char arg[512];
     struct cmd_arg* next;
@@ -52,5 +56,9 @@ int enki_system_run(const char* cmd);
 
 // exit current process
 void enki_exit();
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif
