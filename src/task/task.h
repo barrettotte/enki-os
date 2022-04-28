@@ -5,6 +5,9 @@
 #include "../memory/paging/paging.h"
 #include "process.h"
 
+struct interrupt_frame;
+struct process;
+
 struct registers {
     uint32_t edi;
     uint32_t esi;
@@ -20,12 +23,9 @@ struct registers {
     uint32_t ss;
 };
 
-struct interrupt_frame;
-struct process;
-
 struct task {
     struct paging_4gb_chunk* page_dir;
-    struct registers registers;  // registers when task isn't active
+    struct registers registers;
     struct task* next;
     struct task* prev;
     struct process* process;
@@ -64,7 +64,13 @@ int copy_str_from_task(struct task* task, void* virt_addr, void* phys_addr, int 
 // fetch an item from task's stack
 void* task_get_stack_item(struct task* task, int idx);
 
-// drop into userland
+// convert task's virtual address to physical address that kernel can access
+void* task_virt_to_phys_addr(struct task* task, void* virt_addr);
+
+// switch to next task
+void task_switch_next();
+
+// change CPU state and return to userland
 void task_return(struct registers* regs);
 
 // restore general purpose registers

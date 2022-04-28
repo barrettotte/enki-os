@@ -8,6 +8,10 @@ enum SystemCalls {
     SYSCALL_3_PUTCHAR,
     SYSCALL_4_MALLOC,
     SYSCALL_5_FREE,
+    SYSCALL_6_PROC_START,
+    SYSCALL_7_SYSTEM,
+    SYSCALL_8_PGM_ARGS,
+    SYSCALL_9_EXIT,
 };
 
 // register all system calls

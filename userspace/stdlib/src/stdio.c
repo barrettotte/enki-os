@@ -25,11 +25,11 @@ int printf(const char* fmt, ...) {
         switch(*++p) {
             case 'i':
                 ival = va_arg(ap, int);
-                print(itoa(ival));
+                enki_print(itoa(ival));
                 break;
             case 's':
                 sval = va_arg(ap, char*);
-                print(sval);
+                enki_print(sval);
                 break;
             default:
                 putchar(*p);

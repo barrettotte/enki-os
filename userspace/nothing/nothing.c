@@ -1,27 +1,19 @@
 #include "enki.h"
 #include "stdio.h"
 #include "stdlib.h"
+#include "string.h"
 
 int main(int argc, char** argv) {
-    print("Hello from userland\n");
-    
-    print(itoa(123));
-    print("\n");
-    putchar('X');
 
-    printf("\nThe year is %i\n", 2022);
+    // printf("Hello from userland\n");
+    //
+    // for (int i = 0; i < argc; i++) {
+    //     printf("%s\n", argv[i]);
+    // }
 
-    void* mem = malloc(512);
-    if (!mem) {
-        print("Failed to malloc()\n");
+    while(1) {
+        enki_print(argv[0]);
     }
-    free(mem);
-
-    char buf[1024];
-    enki_tty_readline(buf, sizeof(buf), true);
-    print(buf);
-
-    while(1) {}
 
     return 0;
 }

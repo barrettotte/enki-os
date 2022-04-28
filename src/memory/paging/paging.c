@@ -138,3 +138,9 @@ uint32_t paging_get(uint32_t* dir, void* virt_addr) {
     uint32_t* table = (uint32_t*)(entry &0xFFFFF000);
     return table[tab_idx];
 }
+
+void* paging_get_phys_addr(uint32_t* dir, void* virt_addr) {
+    void *virt_aligned = (void*) paging_align_to_lower(virt_addr);
+    void *offset = (void*)((uint32_t) virt_addr - (uint32_t) virt_aligned);
+    return (void*)((paging_get(dir, virt_aligned) & 0xFFFFF000) + offset);
+}

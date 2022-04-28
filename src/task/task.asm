@@ -1,21 +1,21 @@
         bits 32                             ;
         section .asm                        ;
 
-        global task_return                  ;
-        global restore_gpr                  ;
-        global user_registers               ;
-        
-task_return:                                ; ***** drop into userland *****
-        mov ebp, esp                        ;
+        global task_return                  ; void task_return(struct registers* regs)
+        global restore_gpr                  ; void restore_gpr(struct registers* regs)
+        global user_registers               ; void user_registers()
+
+task_return:                                ; ***** change CPU state and return to userland *****
+        mov ebp, esp                        ; set base pointer
 
         mov ebx, [ebp + 4]                  ; pointer to registers struct
         push dword [ebx + 44]               ; data/stack selector
         push dword [ebx + 40]               ; stack pointer
         
-        pushf                               ;
-        pop eax                             ;
+        pushf                               ; 
+        pop eax                             ; 
         or eax, 0x200                       ; enable interrupts (after iret)
-        push eax                            ;
+        push eax                            ; 
 
         push dword [ebx + 32]               ; code segment
         push dword [ebx + 28]               ; instruction pointer (virtual address)
@@ -28,14 +28,15 @@ task_return:                                ; ***** drop into userland *****
 
         push dword[ebp + 4]                 ; pointer to registers struct
         call restore_gpr                    ; restore general purpose registers
-        add esp, 4                          ; can't pop, but need to get around prior push
-
-        iretd                               ; end task_return subroutine (enter userland)
+        add esp, 4                          ; restore stack pointer  (don't pop, will corrupt a reg)
+                                            
+                                            ; leave kernel and exec in userland
+        iretd                               ; end task_return subroutine
 
 restore_gpr:                                ; ***** restore general purpose registers *****
                                             ; void restore_gpr(struct registers* regs)
-        push ebp                            ;
-        mov ebp, esp                        ;
+        push ebp                            ; store base pointer
+        mov ebp, esp                        ; set base pointer
 
         mov ebx, [ebp + 8]                  ;
         mov edi, [ebx]                      ;
@@ -46,7 +47,7 @@ restore_gpr:                                ; ***** restore general purpose regi
         mov eax, [ebx + 24]                 ;
         mov ebx, [ebx + 12]                 ;
 
-        pop ebp                             ;
+        add esp, 4                          ; restore stack pointer
         ret                                 ; end restore_gpr subroutine
 
 user_registers:                             ; ***** change seg regs to user data seg regs *****

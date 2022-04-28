@@ -13,7 +13,7 @@ TODO: add picture of Enki with link to wiki
 - [x] Keyboard driver
 - [x] Static ELF file loading
 - [x] Partial LibC
-- [ ] Userland with basic shell
+- [x] Userland with basic shell
 - [ ] Multitasking
 
 ## Building Locally
@@ -63,6 +63,7 @@ sudo dd if=boot.bin of=/dev/sdb   # overwrite USB's first sector with our bootlo
 - TODO: gather system info and print on startup
 - TODO: makefile for stdlib and user programs is messy
 - TODO: refactor includes to be based on project dir instead of relative...
+- TODO: clear screen function
 
 ## Limitations
 

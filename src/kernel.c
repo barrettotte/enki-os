@@ -112,7 +112,7 @@ struct gdt_structured gdt_structured[ENKI_TOTAL_GDT_SEGMENTS] = {
 
 void kernel_main() {
     tty_init();
-    print("Welcome to Enki OS\n\n");
+    print("Kernel entry\n");
 
     // init GDT
     memset(gdt_real, 0x00, sizeof(gdt_real));
@@ -146,6 +146,20 @@ void kernel_main() {
     if (status != OK) {
         panic("Failed to load nothing.elf\n");
     }
+    struct cmd_arg arg;
+    strcpy(arg.arg, "X");
+    arg.next = 0x00;
+    process_inject_args(process, &arg);
+
+    // 2nd process
+    status = process_load_switch("0:/nothing.elf", &process);
+    if (status != OK) {
+        panic("Failed to load nothing.elf\n");
+    }
+    strcpy(arg.arg, "A");
+    arg.next = 0x00;
+    process_inject_args(process, &arg);
+
 
     print("Entering first task...\n\n");
     task_run_first();

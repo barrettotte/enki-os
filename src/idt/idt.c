@@ -47,6 +47,17 @@ void idt_set(int i, void* addr) {
     entry->base_high = (uint32_t) addr >> 16;
 }
 
+void idt_handle_exception() {
+    process_terminate(task_get_current()->process);
+    // TODO: https://wiki.osdev.org/Exceptions
+    task_switch_next();
+}
+
+void idt_clock() {
+    outb(0x20, 0x20);  // ack
+    task_switch_next();
+}
+
 void idt_init() {
     memset(idt_entries, 0, sizeof(idt_entries));
     idtr.limit = sizeof(idt_entries) - 1;
@@ -60,6 +71,12 @@ void idt_init() {
     // override interrupts
     idt_set(0x0, idt_zero);
     idt_set(0x80, isr_80h_wrapper);
+
+    // map exception interrupts
+    for (int i = 0; i < 0x20; i++) {
+        idt_register_int_callback(i, idt_handle_exception);
+    }
+    idt_register_int_callback(0x20, idt_clock);
 
     idt_load(&idtr);
 }

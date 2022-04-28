@@ -60,4 +60,7 @@ int paging_set(uint32_t* dir, void* virt_addr, uint32_t val);
 // get page table entry from virtual address
 uint32_t paging_get(uint32_t* dir, void* virt_addr);
 
+// get physical address from virtual address
+void* paging_get_phys_addr(uint32_t* dir, void* virt_addr);
+
 #endif

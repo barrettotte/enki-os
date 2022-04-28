@@ -48,7 +48,7 @@ int task_free(struct task* task) {
 // initialize a task
 int task_init(struct task* task, struct process* proc) {
     memset(task, 0, sizeof(struct task));
-    task->page_dir = paging_new_4gb(PAGING_IS_PRESENT | PAGING_ACCESS_FROM_ALL); // TODO: insecure (ALL=bad)
+    task->page_dir = paging_new_4gb(PAGING_IS_PRESENT | PAGING_ACCESS_FROM_ALL); // TODO: insecure
     
     if (!task->page_dir) {
         return -EIO;
@@ -189,4 +189,17 @@ void* task_get_stack_item(struct task* task, int idx) {
 
     kernel_page();
     return result;
+}
+
+void* task_virt_to_phys_addr(struct task* task, void* virt_addr) {
+    return paging_get_phys_addr(task->page_dir->directory_entry, virt_addr);
+}
+
+void task_switch_next() {
+    struct task* next = task_get_next();
+    if (!next) {
+        panic("No available tasks.\n");
+    }
+    task_switch(next);
+    task_return(&next->registers);
 }

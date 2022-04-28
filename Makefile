@@ -82,6 +82,7 @@ img:
 userspace:	.FORCE
 	$(MAKE) -C userspace/stdlib all
 	$(MAKE) -C userspace/nothing all
+	$(MAKE) -C userspace/shell all
 
 qemu:	build
 	$(QEMU) $(QEMU_FLAGS) -monitor stdio
@@ -91,6 +92,7 @@ mount:
 	@sudo mount -t vfat $(BIN_DIR)/os.bin /mnt/$(OS)
 	@sudo cp hello.txt /mnt/$(OS)
 	@sudo cp userspace/nothing/bin/nothing.elf /mnt/$(OS)
+	@sudo cp userspace/shell/bin/shell.elf /mnt/$(OS)
 
 unmount:
 	@sudo umount /mnt/$(OS)
@@ -103,7 +105,7 @@ debug_kernel:	build
 
 debug_userspace:	build
 	@gdb -ex 'set confirm off' \
-		-ex 'add-symbol-file userspace/nothing/bin/nothing.elf 0x400000' \
+		-ex 'add-symbol-file userspace/shell/bin/shell.elf 0x400000' \
 		-ex 'break main' \
 		-ex 'target remote | $(QEMU) $(QEMU_FLAGS) -S -gdb stdio'
 
@@ -111,3 +113,6 @@ toolchain:
 	@echo "Building toolchain..."
 	@chmod +x scripts/toolchain.sh
 	scripts/toolchain.sh
+
+line_count:
+	git ls-files | xargs wc -l

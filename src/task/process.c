@@ -51,6 +51,8 @@ out:
 // load binary file
 static int process_load_bin(const char* file_name, struct process* proc) {
     int result = OK;
+    void* pgm_data = 0;
+
     int fd = fopen(file_name, "r");
     if (!fd) {
         result = -EIO;
@@ -63,7 +65,7 @@ static int process_load_bin(const char* file_name, struct process* proc) {
         goto out;
     }
 
-    void* pgm_data = kzalloc(stat.file_size);
+    pgm_data = kzalloc(stat.file_size);
     if (!pgm_data) {
         result = -ENOMEM;
         goto out;
@@ -77,7 +79,11 @@ static int process_load_bin(const char* file_name, struct process* proc) {
     proc->file_type = PROCESS_FILE_TYPE_BIN;
     proc->addr = pgm_data;
     proc->size = stat.file_size;
+
 out:
+    if (result < 0 && pgm_data) {
+        kfree(pgm_data);
+    }
     fclose(fd);
     return result;
 }
@@ -247,7 +253,7 @@ out:
 // find a free memory allocation for process
 static int process_find_free_alloc(struct process* proc) {
     for (int i = 0; i < ENKI_MAX_PGM_ALLOCATIONS; i++) {
-        if (proc->allocations[i] == 0) {
+        if (proc->allocations[i].ptr == 0) {
             return i;
         }
     }
@@ -255,23 +261,38 @@ static int process_find_free_alloc(struct process* proc) {
 }
 
 void* process_malloc(struct process* proc, size_t size) {
-    void* mem = kzalloc(size);
-    if (!mem) {
-        return 0;
+    void* ptr = kzalloc(size);
+    if (!ptr) {
+        goto out_err;
     }
 
     int idx = process_find_free_alloc(proc);
     if (idx < 0) {
-        return 0;
+        goto out_err;
     }
-    proc->allocations[idx] = mem;
-    return mem;
+
+    int flags = PAGING_IS_WRITEABLE | PAGING_IS_PRESENT | PAGING_ACCESS_FROM_ALL;
+    void* phys_end = paging_align_address(ptr + size);
+    int result = paging_map_to(proc->task->page_dir, ptr, ptr, phys_end, flags);
+    if (result < 0) {
+        goto out_err;
+    }
+
+    proc->allocations[idx].ptr = ptr;
+    proc->allocations[idx].size = size;
+    return ptr;
+
+out_err:
+    if (ptr) {
+        kfree(ptr);
+    }
+    return 0;
 }
 
 // check if given process owns the provided pointer
 static bool process_owns_ptr(struct process* proc, void* ptr) {
     for (int i = 0; i < ENKI_MAX_PGM_ALLOCATIONS; i++) {
-        if (proc->allocations[i] == ptr) {
+        if (proc->allocations[i].ptr == ptr) {
             return true;
         }
     }
@@ -281,16 +302,168 @@ static bool process_owns_ptr(struct process* proc, void* ptr) {
 // drop allocation entry from processe's allocation table
 static void process_allocation_drop(struct process* proc, void* ptr) {
     for (int i = 0; i < ENKI_MAX_PGM_ALLOCATIONS; i++) {
-        if (proc->allocations[i] == ptr) {
-            proc->allocations[i] = 0x00;
+        if (proc->allocations[i].ptr == ptr) {
+            proc->allocations[i].ptr = 0x00;
+            proc->allocations[i].size = 0;
         }
     }
 }
 
-void process_free(struct process* proc, void* to_free) {
-    if (!process_owns_ptr(proc, to_free)) {
+// get process allocation by address
+static struct process_allocation* process_get_allocation(struct process* proc, void* addr) {
+    for (int i = 0; i < ENKI_MAX_PGM_ALLOCATIONS; i++) {
+        if (proc->allocations[i].ptr == addr) {
+            return &proc->allocations[i];
+        }
+    }
+    return 0;
+}
+
+void process_free(struct process* proc, void* to_free) {    
+    struct process_allocation* alloc = process_get_allocation(proc, to_free);
+    if (!alloc) {
+        return;  // not this proc's pointer
+    }
+    
+    void* phys_end = paging_align_address(alloc->ptr + alloc->size);
+    int result = paging_map_to(proc->task->page_dir, alloc->ptr, alloc->ptr, phys_end, 0x00);
+    if (result < 0) {
         return;
     }
+
     process_allocation_drop(proc, to_free);
     kfree(to_free);
+}
+
+void process_get_args(struct process* proc, int* argc, char*** argv) {
+    *argc = proc->args.argc;
+    *argv = proc->args.argv;
+}
+
+// count arguments in command
+int process_count_cmd_args(struct cmd_arg* root_arg) {
+    struct cmd_arg* arg = root_arg;
+    int i = 0;
+
+    while (arg) {
+        i++;
+        arg = arg->next;
+    }
+    return i;
+}
+
+int process_inject_args(struct process* proc, struct cmd_arg* root_arg) {
+    int result = 0;
+    struct cmd_arg* current = root_arg;
+    int i = 0;
+
+    int argc = process_count_cmd_args(root_arg);
+    if (argc == 0) {
+        result = -EIO;
+        goto out;
+    }
+
+    char **argv = process_malloc(proc, argc * sizeof(const char*));
+    if (!argv) {
+        result = -ENOMEM;
+        goto out;
+    }
+
+    while(current) {
+        char* s_arg = process_malloc(proc, sizeof(current->arg));
+        if (!s_arg) {
+            result = -ENOMEM;
+            goto out;
+        }
+        strncpy(s_arg, current->arg, sizeof(current->arg));
+
+        argv[i] = s_arg;
+        current = current->next;
+        i++;
+    }
+    proc->args.argc = argc;
+    proc->args.argv = argv;
+
+out:
+    return result;
+}
+
+// free all allocations for a process
+static int process_free_allocations(struct process* proc) {
+    for (int i = 0; i < ENKI_MAX_PGM_ALLOCATIONS; i++) {
+        process_free(proc, proc->allocations[i].ptr);
+    }
+    return 0;
+}
+
+// free binary file data
+static int process_free_bin_data(struct process* proc) {
+    kfree(proc->addr);
+    return 0;
+}
+
+// free ELF file data
+static int process_free_elf_data(struct process* proc) {
+    elf_close(proc->elf_file);
+    return 0;
+}
+
+static int process_free_pgm_data(struct process* proc) {
+    int result = 0;
+    switch(proc->file_type) {
+        case PROCESS_FILE_TYPE_BIN:
+            result = process_free_bin_data(proc);
+            break;
+        case PROCESS_FILE_TYPE_ELF:
+            result = process_free_elf_data(proc);
+            break;
+        default:
+            result = -EINVARG;
+            break;
+    }
+    return result;
+}
+
+//
+void process_switch_to_any() {
+    for (int i = 0; i < ENKI_MAX_PROCESSES; i++) {
+        if (processes[i]) {
+            process_switch(processes[i]);
+            return;
+        }
+    }
+    panic("No processes to switch to.\n");  // or respawn a shell
+}
+
+// remove process from process linked list
+static void process_unlink(struct process* proc) {
+    processes[proc->id] = 0x00;
+    if (process_current == proc) {
+        process_switch_to_any();
+    }
+}
+
+int process_terminate(struct process* proc) {
+    int result = 0;
+    
+    result = process_free_allocations(proc);
+    if (result < 0) {
+        return result;
+    }
+
+    result = process_free_pgm_data(proc);
+    if (result < 0) {
+        return result;
+    }
+
+    kfree(proc->stack);
+
+    result = task_free(proc->task);
+    if (result < 0) {
+        return result;
+    }
+
+    process_unlink(proc);
+    
+    return 0;
 }

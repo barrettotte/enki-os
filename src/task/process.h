@@ -12,12 +12,27 @@
 
 typedef unsigned char PROCESS_FILE_TYPE;
 
+struct process_allocation {
+    void* ptr;
+    size_t size;
+};
+
+struct cmd_arg {
+    char arg[512];
+    struct cmd_arg* next;
+};
+
+struct process_args {
+    int argc;
+    char** argv;
+};
+
 struct process {
     uint16_t id;
     char file_name[ENKI_MAX_PATH];
     PROCESS_FILE_TYPE file_type;
     struct task* task;
-    void* allocations[ENKI_MAX_PGM_ALLOCATIONS];
+    struct process_allocation allocations[ENKI_MAX_PGM_ALLOCATIONS];
 
     union {
         void* addr; // process memory (code and data segments)
@@ -32,6 +47,8 @@ struct process {
         int tail;
         int head;
     } keyboard;
+
+    struct process_args args;
 };
 
 // fetch current process
@@ -57,5 +74,14 @@ void* process_malloc(struct process* proc, size_t size);
 
 // free memory in given process
 void process_free(struct process* proc, void* to_free);
+
+// get argc and argv of process
+void process_get_args(struct process* proc, int* argc, char*** argv);
+
+// inject command arguments into process
+int process_inject_args(struct process* proc, struct cmd_arg* root_arg);
+
+// terminate a given process and free its memory
+int process_terminate(struct process* proc);
 
 #endif

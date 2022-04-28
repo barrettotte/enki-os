@@ -8,6 +8,8 @@
 #include <stddef.h>
 #include <stdint.h>
 
+#define PS2_CAPSLOCK 0x3A
+
 int ps2_keyboard_init();
 
 static uint8_t scan_set_1[] = {
@@ -32,6 +34,13 @@ uint8_t ps2_scan_to_char(uint8_t sc) {
         return 0;    
     }
     char c = scan_set_1[sc];
+
+    if (keyboard_get_capslock(&ps2_keyboard) == KEYBOARD_CAPSLOCK_OFF) {
+        if (c >= 'A' && c <= 'Z') {
+            c += 32;  // to lower
+        }
+    }
+
     return c;
 }
 
@@ -44,6 +53,11 @@ void ps2_handle_interrupt() {
     if (sc & PS2_KEY_RELEASED) {
         return;
     }
+    if (sc == PS2_CAPSLOCK) {
+        KEYBOARD_CAPSLOCK_STATE state = keyboard_get_capslock(&ps2_keyboard);
+        keyboard_set_capslock(&ps2_keyboard, state == KEYBOARD_CAPSLOCK_ON 
+            ? KEYBOARD_CAPSLOCK_OFF : KEYBOARD_CAPSLOCK_ON);
+    }
 
     uint8_t c = ps2_scan_to_char(sc);
     if (c != 0) {
@@ -55,6 +69,8 @@ void ps2_handle_interrupt() {
 
 int ps2_keyboard_init() {
     idt_register_int_callback(ISR_KBD_INTERRUPT, ps2_handle_interrupt);
+    keyboard_set_capslock(&ps2_keyboard, KEYBOARD_CAPSLOCK_OFF);  // TODO: use kbd cmds to determine init state
+
     outb(PS2_CMD_PORT, PS2_CMD_EN_FIRST_PORT);
     return 0;
 }
