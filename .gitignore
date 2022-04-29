@@ -13,3 +13,4 @@ out/
 docs/barebones/boot
 
 .vscode/*
+!.vscode/c_cpp_properties.json

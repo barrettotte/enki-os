@@ -1,20 +1,19 @@
 # enki-os
 
-A toy x86 operating system.
+A basic x86 kernel to learn how operating systems get from BIOS to userland.
 
-This is my first dive into the deep world of Operating Systems.
-
-TODO: add picture of Enki with link to wiki
+This is my first dive into the deep world of operating systems. I hope to make 
+another kernel in the future using the things I learned here.
 
 ## Features / Goals
 
 - [x] Custom bootloader
-- [x] FAT-16 file system
+- [x] FAT-16 file system (except `fwrite`)
 - [x] Keyboard driver
 - [x] Static ELF file loading
 - [x] Partial LibC
 - [x] Userland with basic shell
-- [ ] Multitasking
+- [x] Basic Multitasking (timer based)
 
 ## Building Locally
 
@@ -23,54 +22,31 @@ TODO: add picture of Enki with link to wiki
 - Build OS image and launch in QEMU: `make qemu`
 - Build OS image and launch with GDB connected to QEMU: `make debug`
 
-## Development
-
-Debug via GDB and QEMU with `make debug`
-
-```sh
-# burn to USB
-sudo fdisk -l                     # find USB disk
-sudo dd if=boot.bin of=/dev/sdb   # overwrite USB's first sector with our bootloader
-```
-
 ## TODO Items
 
-- TODO: can I make a docker image for OS development ? vagrant?
-- TODO: ASCII art on launch
-- TODO: three shell commands
-- TODO: one simple game
-- TODO: multiboot header?
+- TODO: comments on all C functions and asm
 - TODO: move `tty_*` functions out of `kernel.c`
-- TODO: use `#pragma once` instead of `ifndef` guard?
-- TODO: comments on all C functions
-- TODO: comment asm
-- TODO: double check `static` used where needed
-- TODO: remove refs to `<stddef.h>` and any other `<std*.h>` file -> make a `include/types.h`
-- TODO: implement a reasonable amount of stdlib - https://en.cppreference.com/w/c/header
 - TODO: reevaluate use of `goto`
-- TODO: compare with osdev meatyskeleton and the likes
-- TODO: refactor some paths to `stdlib` (ex: string, memory, )
-  - `io` to `cpu/`
-  - `string` to `stdlib/`
-  - `kernel.*` to `kernel/`
-- TODO: userspace program makefile hardcoded arch/fmt...
+- TODO: refactor some paths to `libc`
 - TODO: rename `isr_80h` to `syscall`?
   - move `idt.c` `isr_80h` commands to `syscall`
   - move `isr_80h` subroutines in `idt.asm` into `syscall.asm`
-- TODO: for stdlib headers consider:
-  - `#ifdef __cplusplus` and `extern "C" {`
-- TODO: review https://wiki.osdev.org/Meaty_Skeleton
-- TODO: gather system info and print on startup
 - TODO: makefile for stdlib and user programs is messy
+
+
+- TODO: gather system info and print on startup (memory, timer, etc)
 - TODO: refactor includes to be based on project dir instead of relative...
-- TODO: clear screen function
+- TODO: dockerfile? Github action?
 
 ## Limitations
 
+- Lazy A20 line enable; Could potentially fail on some systems
+- Memory fragmentation
+- Only one drive supported (master)
+- Missing FAT16 write
 - ELF file loading loads entire file into heap memory...
 - Only supports loading static ELF files
-- Memory fragmentation TODO:
-- Lazy A20 line enable; Could potentially fail on some systems
+- Simple multitasking via timer
 
 ## References
 
