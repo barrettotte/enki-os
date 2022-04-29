@@ -7,9 +7,11 @@
 extern "C" {
 #endif
 
-int printf(const char* msg, ...);
-int putchar(int);
-int puts(const char*);
+//
+int putchar(int c);
+
+//
+int printf(const char* fmt, ...);
 
 #ifdef __cplusplus
 }

@@ -139,41 +139,32 @@ void kernel_main() {
 
     keyboard_init();
 
+    struct process* proc = 0;
+    int status = process_load_switch("0:/shell", &proc);
+    if (status != OK) {
+        panic("Failed to load shell process\n");
+    }
+
     // test process
-    struct process* process = 0;
-    int status = process_load_switch("0:/nothing.elf", &process);
-    if (status != OK) {
-        panic("Failed to load nothing.elf\n");
-    }
-    struct cmd_arg arg;
-    strcpy(arg.arg, "X");
-    arg.next = 0x00;
-    process_inject_args(process, &arg);
+    // struct process* process = 0;
+    // int status = process_load_switch("0:/nothing", &process);
+    // if (status != OK) {
+    //     panic("Failed to load file nothing\n");
+    // }
+    // struct cmd_arg arg;
+    // strcpy(arg.arg, "X");
+    // arg.next = 0x00;
+    // process_inject_args(process, &arg);
 
-    // 2nd process
-    status = process_load_switch("0:/nothing.elf", &process);
-    if (status != OK) {
-        panic("Failed to load nothing.elf\n");
-    }
-    strcpy(arg.arg, "A");
-    arg.next = 0x00;
-    process_inject_args(process, &arg);
-
+    // // 2nd process
+    // status = process_load_switch("0:/nothing", &process);
+    // if (status != OK) {
+    //     panic("Failed to load file nothing\n");
+    // }
+    // strcpy(arg.arg, "A");
+    // arg.next = 0x00;
+    // process_inject_args(process, &arg);
 
     print("Entering first task...\n\n");
     task_run_first();
-
-    // enable_interrupts();
-
-    // test FAT16 file open
-    // int fd = fopen("0:/hello.txt", "r");
-    // if (fd) {
-    //     print("opened 0:/hello.txt\n");
-    //     struct file_stat s;
-    //     fstat(fd, &s);
-    //     fclose(fd);
-    //     print("closed 0:/hello.txt\n");
-    // }
-
-    // print("\nend of kernel_main() reached\n");
 }

@@ -31,7 +31,9 @@ all:	build img mount unmount
 build:	clean
 	@mkdir -p $(BIN_DIR)
 	$(MAKE) -C $(KERNEL_DIR) all
-	$(MAKE) -C $(USER_DIR)/stdlib all
+	$(MAKE) -C $(LIBC_DIR) all
+#	$(MAKE) -C $(USER_DIR)/stdlib all
+	$(MAKE) -C $(USER_DIR)/asm-test all
 	$(MAKE) -C $(USER_DIR)/nothing all
 	$(MAKE) -C $(USER_DIR)/shell all
 
@@ -47,8 +49,9 @@ img:
 mount:
 	@sudo mkdir -p $(MNT_DIR)
 	@sudo mount -t vfat $(ENKI_BIN) $(MNT_DIR)
-	@sudo cp $(USER_DIR)/nothing/bin/nothing.elf $(MNT_DIR)
-	@sudo cp $(USER_DIR)/shell/bin/shell.elf $(MNT_DIR)
+	@sudo cp $(USER_DIR)/nothing/bin/nothing $(MNT_DIR)
+	@sudo cp $(USER_DIR)/asm-test/bin/asm-test $(MNT_DIR)
+	@sudo cp $(USER_DIR)/shell/bin/shell $(MNT_DIR)
 
 unmount:
 	@sudo umount $(MNT_DIR)

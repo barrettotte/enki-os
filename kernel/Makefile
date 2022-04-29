@@ -13,6 +13,7 @@ SRC_EXCL    := -not \( -path "$(SRC_DIR)/boot/*" -o -path "$(SRC_DIR)/kernel.asm
 SRC_TYPES   := -type f \( -iname "*.asm" -o -iname "*.c" -o -iname "*.cpp" \)
 SOURCES     := $(shell find $(SRC_DIR)/* $(SRC_EXCL) $(SRC_TYPES))
 OBJECTS     := $(foreach OBJECT, $(patsubst %.asm, %.asm.o, $(patsubst %.c, %.o, $(patsubst %.cpp, %.o, $(SOURCES)))), $(OBJ_DIR)/$(OBJECT))
+
 KERNEL_FULL := $(OBJ_DIR)/kernel_full.o
 
 CROSS := "$(HOME)/opt/cross/bin/$(ARCH)-$(FMT)"

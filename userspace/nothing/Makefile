@@ -5,13 +5,18 @@ BIN_DIR := bin
 OBJ_DIR := build
 SRC_DIR := .
 
-STDLIB := ../stdlib/src
-TARGET := nothing
+LIBC_DIR := ../../libc
+LIBC_BIN := $(LIBC_DIR)/bin/libc
+TARGET := $(BIN_DIR)/nothing
+
+SRC_TYPES   := -type f \( -iname "*.asm" -o -iname "*.c" -o -iname "*.cpp" \)
+SOURCES     := $(shell find $(SRC_DIR)/* $(SRC_TYPES))
+OBJECTS     := $(foreach OBJECT, $(patsubst %.asm, %.asm.o, $(patsubst %.c, %.o, $(patsubst %.cpp, %.o, $(SOURCES)))), $(OBJ_DIR)/$(OBJECT))
 
 CROSS := "$(HOME)/opt/cross/bin/$(ARCH)-$(FMT)"
 
 CC := $(CROSS)-gcc
-CC_INCLUDES := $(STDLIB)
+CC_INCLUDES := -I $(SRC_DIR)/libc
 CC_FLAGS := -g -ffreestanding \
 			-falign-jumps -falign-functions -falign-labels -falign-loops \
 			-fstrength-reduce -fomit-frame-pointer -finline-functions -fno-builtin \
@@ -24,16 +29,32 @@ CC_FLAGS := -g -ffreestanding \
 
 all:	build
 
-build:	clean
-	@echo "building $(TARGET)..."
-	@mkdir -p $(OBJ_DIR)/
-	@mkdir -p $(BIN_DIR)/
-	$(CC) -I $(CC_INCLUDES) $(CC_FLAGS) -std=gnu99 -c $(TARGET).c -o $(OBJ_DIR)/$(TARGET).o
-	$(CC) -g -T linker.ld -o $(BIN_DIR)/$(TARGET).elf -ffreestanding -O0 -nostdlib -fpic -g \
-		$(OBJ_DIR)/$(TARGET).o ../stdlib/bin/stdlib.elf
-
-read_elf:	build
-	readelf -a $(BIN_DIR)/$(TARGET).elf
+build:	clean install_headers $(TARGET)
 
 clean:
-	@rm -rf $(OBJ_DIR)/* $(BIN_DIR)/*
+	@rm -rf $(OBJ_DIR)/* $(BIN_DIR)/* $(SRC_DIR)/libc
+
+install_headers:
+	@mkdir -p $(SRC_DIR)/libc
+	cp -R --preserve=timestamps $(LIBC_DIR)/include/* $(SRC_DIR)/libc
+
+$(TARGET): $(OBJECTS)
+	@echo "building $(TARGET)..."
+	@mkdir -p $(@D)
+	$(CC) -g -T $(SRC_DIR)/linker.ld -o $(TARGET) -ffreestanding -O0 -nostdlib -fpic -g \
+		$(OBJECTS) $(LIBC_BIN)
+
+$(OBJ_DIR)/%.asm.o: %.asm
+	@mkdir -p $(@D)
+	$(AS) $(AS_FLAGS) $< -o $@
+
+$(OBJ_DIR)/%.o: %.c
+	@mkdir -p $(@D)
+	$(CC) $(CC_INCLUDES) $(CC_FLAGS) -std=gnu99 -c $< -o $@
+
+$(OBJ_DIR)/%.o: %.cpp
+	@mkdir -p $(@D)
+	@echo "No C++ support...unable to compile $<"
+
+read_elf:	build
+	readelf -a $(BIN_DIR)/$(TARGET)

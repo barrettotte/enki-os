@@ -119,6 +119,53 @@ char* strncpy(char* dst, const char* src, int n) {
     return dst;
 }
 
+char* strtok(char* str, const char* delimiters) {
+    char* sp = 0;
+    int i = 0;
+    int len = strlen(delimiters);
+    if (!str && !sp) {
+        return 0;
+    }
+
+    if (str && !sp) {
+        sp = str;
+    }
+
+    char* p_start = sp;
+    while(1) {
+        for (i = 0; i < len; i++) {
+            if (*p_start == delimiters[i]) {
+                p_start++;
+                break;
+            }
+        }
+        if (i == len) {
+            sp = p_start;
+            break;
+        }
+    }
+    if (*sp == '\0') {
+        sp = 0;
+        return sp;
+    }
+
+    // find end of substring
+    while (*sp != '\0') {
+        for (i = 0; i < len; i++) {
+            if (*sp == delimiters[i]) {
+                *sp = '\0';
+                break;
+            }
+        }
+        sp++;
+        if (i < len) {
+            break;
+        }
+    }
+
+    return p_start;
+}
+
 bool isdigit(char c) {
     return c >= 48 && c <= 57;
 }

@@ -38,6 +38,9 @@ char* strcpy(char* dst, const char* src);
 // copy string from source to destination up to n
 char* strncpy(char* dst, const char* src, int n);
 
+// tokenize a string 
+char* strtok(char* str, const char* delimiters);
+
 // check if character is a digit
 bool isdigit(char c);
 
