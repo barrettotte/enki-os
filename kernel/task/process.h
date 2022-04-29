@@ -1,7 +1,7 @@
 #ifndef PROCESS_H
 #define PROCESS_H
 
-#include "../config.h"
+#include "../include/kernel/config.h"
 #include "task.h"
 
 #include <stdbool.h>

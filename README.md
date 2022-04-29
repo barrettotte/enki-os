@@ -31,7 +31,6 @@ another kernel in the future using the things I learned here.
 - TODO: rename `isr_80h` to `syscall`?
   - move `idt.c` `isr_80h` commands to `syscall`
   - move `isr_80h` subroutines in `idt.asm` into `syscall.asm`
-- TODO: makefile for stdlib and user programs is messy
 
 
 - TODO: gather system info and print on startup (memory, timer, etc)

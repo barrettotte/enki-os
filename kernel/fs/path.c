@@ -1,5 +1,5 @@
-#include "../config.h"
-#include "../status.h"
+#include "../include/kernel/config.h"
+#include "../include/kernel/status.h"
 #include "../memory/heap/kheap.h"
 #include "../string/string.h"
 #include "path.h"

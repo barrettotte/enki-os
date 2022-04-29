@@ -1,7 +1,7 @@
 #ifndef TASK_H
 #define TASK_H
 
-#include "../config.h"
+#include "../include/kernel/config.h"
 #include "../memory/paging/paging.h"
 #include "process.h"
 
@@ -24,7 +24,7 @@ struct registers {
 };
 
 struct task {
-    struct paging_4gb_chunk* page_dir;
+    struct paging_chunk* page_dir;
     struct registers registers;
     struct task* next;
     struct task* prev;

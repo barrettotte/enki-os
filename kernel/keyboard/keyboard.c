@@ -1,7 +1,6 @@
-#include "../kernel.h"
 #include "../task/process.h"
 #include "../task/task.h"
-#include "../status.h"
+#include "../include/kernel/status.h"
 #include "keyboard.h"
 #include "ps2.h"
 

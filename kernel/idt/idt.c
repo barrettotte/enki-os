@@ -1,8 +1,10 @@
 #include "idt.h"
-#include "../config.h"
-#include "../kernel.h"
+#include "../include/kernel/config.h"
+#include "../include/kernel/kernel.h"
+#include "../include/kernel/panic.h"
+#include "../include/kernel/status.h"
+#include "../include/kernel/tty.h"
 #include "../io/io.h"
-#include "../status.h"
 #include "../string/string.h"
 #include "../task/task.h"
 
@@ -34,7 +36,7 @@ void interrupt_handler(int interrupt, struct  interrupt_frame* frame) {
 }
 
 void idt_zero() {
-    print("Divide by zero error\n");
+    tty_writestr("Divide by zero error\n");
 }
 
 // set an interrupt
@@ -86,7 +88,7 @@ int idt_register_int_callback(int interrupt, INTERRUPT_CALLBACK_FN callback) {
         return -EINVARG;
     }
     int_callbacks[interrupt] = callback;
-    return OK;
+    return 0;
 }
 
 void isr_80h_register_cmd(int cmd_idx, ISR_80H_CMD cmd_fn) {

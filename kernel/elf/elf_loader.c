@@ -1,11 +1,11 @@
-#include "../../config.h"
-#include "../../fs/file.h"
-#include "../../kernel.h"
-#include "../../memory/heap/kheap.h"
-#include "../../memory/paging/paging.h"
-#include "../../status.h"
-#include "../../string/string.h"
-#include "elf_loader.h"
+#include "../include/elf/elf_loader.h"
+#include "../include/kernel/config.h"
+#include "../include/kernel/status.h"
+
+#include "../fs/file.h"
+#include "../memory/heap/kheap.h"
+#include "../memory/paging/paging.h"
+#include "../string/string.h"
 
 #include <stdbool.h>
 
@@ -95,7 +95,7 @@ int elf_validate_loaded(struct elf_header* header) {
     if (elf_valid_signature(header) && elf_valid_class(header) 
         && elf_valid_encoding(header) && elf_has_program_header(header)) {
 
-        return OK;
+        return 0;
     }
     return -EINVFMT;
 }
@@ -112,7 +112,7 @@ int elf_process_phdr_pt_load(struct elf_file* elf_file, struct elf32_phdr* phdr)
         elf_file->virt_end_addr = (void*) end_virt_addr;
         elf_file->phys_end_addr = elf_memory(elf_file) + phdr->p_offset + phdr->p_filesz;
     }
-    return OK;
+    return 0;
 }
 
 //

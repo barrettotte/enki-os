@@ -1,6 +1,6 @@
-#include "../config.h"
-#include "../kernel.h"
-#include "../status.h"
+#include "../include/kernel/config.h"
+#include "../include/kernel/panic.h"
+#include "../include/kernel/status.h"
 #include "../disk/disk.h"
 #include "../memory/heap/kheap.h"
 #include "../string/string.h"
@@ -28,19 +28,17 @@ static void file_free_descriptor(struct file_descriptor* desc) {
 
 // create a reference to new file descriptor
 static int file_new_descriptor(struct file_descriptor** desc_out) {
-    int status = -ENOMEM;
     for (int i = 0; i < ENKI_MAX_FILE_DESCRIPTORS; i++) {
         if (file_descriptors[i] == 0) {
             struct file_descriptor* desc = kzalloc(sizeof(struct file_descriptor));
+            
             desc->index = i + 1;  // one-indexed
             file_descriptors[i] = desc;
             *desc_out = desc;
-            
-            status = OK;
-            break;
+            return 0;
         }
     }
-    return status;
+    return -ENOMEM;
 }
 
 // get reference to a file descriptor
@@ -61,7 +59,7 @@ void fs_insert_file_system(struct file_system* fs) {
     free_fs = fs_get_free_file_system();
 
     if (!free_fs) {
-        print("Panic! Problem inserting file system, no free fs");
+        panic("fs_insert_file_system(): No free file system to insert into.\n");
         while(1) {}
     }
     *free_fs = fs;
@@ -131,8 +129,8 @@ int fopen(const char* file_name, const char* mode) {
     }
 
     void* desc_private = disk->fs->open(disk, root->first, fmode);
-    if (IS_ERR(desc_private)) {
-        status = ERROR_I(desc_private);
+    if (desc_private < 0) {
+        status = (int) desc_private;
         goto out;
     }
 
@@ -172,19 +170,14 @@ out:
 }
 
 int fclose(int fd) {
-    int result = 0;
     struct file_descriptor* desc = file_get_descriptor(fd);
     if (!desc) {
-        result = -EIO;
-        goto out;
+        return -EIO;
     }
-
-    result = desc->fs->close(desc->private_data);
-    if (result == OK) {
+    if (!desc->fs->close(desc->private_data)) {
         file_free_descriptor(desc);
     }
-out:
-    return result;
+    return 0;
 }
 
 int fseek(int fd, int offset, FILE_SEEK_MODE mode) {

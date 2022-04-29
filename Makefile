@@ -32,7 +32,6 @@ build:	clean
 	@mkdir -p $(BIN_DIR)
 	$(MAKE) -C $(KERNEL_DIR) all
 	$(MAKE) -C $(LIBC_DIR) all
-#	$(MAKE) -C $(USER_DIR)/stdlib all
 	$(MAKE) -C $(USER_DIR)/asm-test all
 	$(MAKE) -C $(USER_DIR)/nothing all
 	$(MAKE) -C $(USER_DIR)/shell all
@@ -76,5 +75,5 @@ toolchain:
 	@chmod +x $(SCRIPTS_DIR)/toolchain.sh
 	$(SCRIPTS_DIR)/toolchain.sh
 
-line_count:	all
+line_count:
 	git ls-files | xargs wc -l

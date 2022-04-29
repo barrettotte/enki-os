@@ -9,7 +9,7 @@ SRC_DIR := .
 TARGET  := $(BIN_DIR)/kernel.bin
 HEADERS := $(shell find $(SRC_DIR)/* -type f -iname "*.h")
 
-SRC_EXCL    := -not \( -path "$(SRC_DIR)/boot/*" -o -path "$(SRC_DIR)/kernel.asm" \)
+SRC_EXCL    := -not \( -path "$(SRC_DIR)/boot/*" -o -path "$(SRC_DIR)/kernel/kernel.asm" \)
 SRC_TYPES   := -type f \( -iname "*.asm" -o -iname "*.c" -o -iname "*.cpp" \)
 SOURCES     := $(shell find $(SRC_DIR)/* $(SRC_EXCL) $(SRC_TYPES))
 OBJECTS     := $(foreach OBJECT, $(patsubst %.asm, %.asm.o, $(patsubst %.c, %.o, $(patsubst %.cpp, %.o, $(SOURCES)))), $(OBJ_DIR)/$(OBJECT))
@@ -42,9 +42,9 @@ CPP_FLAGS := -g -ffreestanding \
 $(TARGET): $(OBJECTS)
 	@mkdir -p $(@D)
 	$(AS) -f bin $(SRC_DIR)/boot/boot.asm -o $(BIN_DIR)/boot.bin
-	$(AS) $(AS_FLAGS) $(SRC_DIR)/kernel.asm -o $(OBJ_DIR)/kernel.asm.o
+	$(AS) $(AS_FLAGS) $(SRC_DIR)/kernel/kernel.asm -o $(OBJ_DIR)/kernel/kernel.asm.o
 	@echo "linking...objects: $+"
-	$(LD) $(LD_FLAGS) $(OBJ_DIR)/kernel.asm.o $+ -o $(KERNEL_FULL)
+	$(LD) $(LD_FLAGS) $(OBJ_DIR)/kernel/kernel.asm.o $+ -o $(KERNEL_FULL)
 	$(CC) $(CC_FLAGS) -T $(SRC_DIR)/linker.ld -o $@ -ffreestanding -O0 -nostdlib $(KERNEL_FULL)
 
 $(OBJ_DIR)/%.asm.o: %.asm

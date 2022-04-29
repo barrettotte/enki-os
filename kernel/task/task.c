@@ -1,9 +1,10 @@
-#include "../kernel.h"
 #include "../idt/idt.h"
-#include "../loader/formats/elf_loader.h"
+#include "../include/elf/elf_loader.h"
 #include "../memory/heap/kheap.h"
 #include "../memory/paging/paging.h"
-#include "../status.h"
+#include "../include/kernel/kernel.h"
+#include "../include/kernel/panic.h"
+#include "../include/kernel/status.h"
 #include "../string/string.h"
 #include "task.h"
 
@@ -38,7 +39,7 @@ static void task_list_remove(struct task* task) {
 }
 
 int task_free(struct task* task) {
-    paging_free_4gb(task->page_dir);
+    paging_free(task->page_dir);
     task_list_remove(task);
     kfree(task);
     return 0;
@@ -47,7 +48,7 @@ int task_free(struct task* task) {
 // initialize a task
 int task_init(struct task* task, struct process* proc) {
     memset(task, 0, sizeof(struct task));
-    task->page_dir = paging_new_4gb(PAGING_IS_PRESENT | PAGING_ACCESS_FROM_ALL); // TODO: insecure
+    task->page_dir = paging_new(PAGING_IS_PRESENT | PAGING_ACCESS_FROM_ALL); // TODO: insecure
     
     if (!task->page_dir) {
         return -EIO;
@@ -75,7 +76,7 @@ struct task* task_new(struct process* process) {
         goto out;
     }
     result = task_init(task, process);
-    if (result != OK) {
+    if (result) {
         goto out;
     }
 
@@ -90,9 +91,9 @@ struct task* task_new(struct process* process) {
     task_tail = task;
 
 out:
-    if (IS_ERR(result)) {
+    if (result < 0) {
         task_free(task);
-        return ERROR(result);
+        return 0;
     }
     return task;
 }

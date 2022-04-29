@@ -1,5 +1,5 @@
-#include "../kernel.h"
 #include "gdt.h"
+#include "../include/kernel/panic.h"
 
 // convert structured GDT entry to unstructured entry
 void encode_gdt_entry(uint8_t* target, struct gdt_structured src) {

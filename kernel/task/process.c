@@ -1,10 +1,10 @@
 #include "../fs/file.h"
-#include "../loader/formats/elf_loader.h"
+#include "../include/elf/elf_loader.h"
 #include "../memory/heap/kheap.h"
 #include "../memory/paging/paging.h"
 #include "../string/string.h"
-#include "../kernel.h"
-#include "../status.h"
+#include "../include/kernel/panic.h"
+#include "../include/kernel/status.h"
 #include "process.h"
 #include "task.h"
 
@@ -29,7 +29,7 @@ struct process* process_get(int id) {
 
 int process_switch(struct process* proc) {
     process_current = proc;
-    return OK;
+    return 0;
 }
 
 // load ELF file
@@ -49,7 +49,7 @@ out:
 
 // load binary file
 static int process_load_bin(const char* file_name, struct process* proc) {
-    int result = OK;
+    int result = 0;
     void* pgm_data = 0;
 
     int fd = fopen(file_name, "r");
@@ -60,7 +60,7 @@ static int process_load_bin(const char* file_name, struct process* proc) {
     
     struct file_stat stat;
     result = fstat(fd, &stat);
-    if (result != OK) {
+    if (result) {
         goto out;
     }
 
@@ -89,8 +89,8 @@ out:
 
 // load data for process
 static int process_load_data(const char* file_name, struct process* proc) {
-    int result = OK;
-    result = process_load_elf(file_name, proc);
+    int result = process_load_elf(file_name, proc);
+    
     if (result == -EINVFMT) {
         result = process_load_bin(file_name, proc);
     }
@@ -103,12 +103,12 @@ static int process_map_bin(struct process* proc) {
 
     paging_map_to(proc->task->page_dir, (void*) ENKI_PGM_VIRT_ADDR, 
         proc->addr, paging_align_address(proc->addr + proc->size), flags);
-    return OK;
+    return 0;
 }
 
 // map ELF file process to virtual addresses
 static int process_map_elf(struct process* proc) {
-    int result = OK;
+    int result = 0;
     struct elf_file* elf_file = proc->elf_file;
     struct elf_header* header = elf_header(elf_file);
     struct elf32_phdr* phdrs = elf_pheader(header);
@@ -135,7 +135,7 @@ static int process_map_elf(struct process* proc) {
 
 // map process to virtual addresses of page tables
 int process_map_memory(struct process* proc) {
-    int result = OK;
+    int result = 0;
 
     switch(proc->file_type) {
         case PROCESS_FILE_TYPE_BIN:
@@ -149,14 +149,13 @@ int process_map_memory(struct process* proc) {
             break;
     }
     if (result < 0) {
-        goto out;
+        return result;
     }
 
     // setup program stack
     uint32_t flags = PAGING_IS_PRESENT | PAGING_ACCESS_FROM_ALL | PAGING_IS_WRITEABLE;
     void* phys_end = paging_align_address(proc->stack + ENKI_USER_PGM_STACK_SIZE);
     paging_map_to(proc->task->page_dir, (void*) ENKI_PGM_VIRT_STACK_ADDR_END, proc->stack, phys_end, flags);
-out:
     return result;
 }
 
@@ -171,27 +170,23 @@ int process_get_free_slot() {
 }
 
 int process_load(const char* file_name, struct process** proc) {
-    int result = OK;
     int slot = process_get_free_slot();
     if (slot < 0) {
-        result = -EISTKN;
-        goto out;
+        return -EISTKN;
     }
-    result = process_load_slot(file_name, proc, slot);
-out:
-    return result;
+    return process_load_slot(file_name, proc, slot);
 }
 
 int process_load_switch(const char* file_name, struct process** proc) {
-    int result = process_load(file_name, proc);
-    if (result == OK) {
+    int err = process_load(file_name, proc);
+    if (!err) {
         process_switch(*proc);
     }
-    return result;
+    return err;
 }
 
 int process_load_slot(const char* file_name, struct process** proc, int proc_slot) {
-    int result = OK;
+    int result = 0;
     struct task* task = 0;
     struct process* load_proc;
     void* pgm_stack_ptr = 0;
@@ -225,8 +220,8 @@ int process_load_slot(const char* file_name, struct process** proc, int proc_slo
 
     // init task
     task = task_new(load_proc);
-    if (ERROR_I(task) == 0) {
-        result = ERROR_I(task);
+    if (!task) {
+        result = -ENOMEM;
         goto out;
     }
     load_proc->task = task;
@@ -240,11 +235,10 @@ int process_load_slot(const char* file_name, struct process** proc, int proc_slo
     processes[proc_slot] = load_proc;
     
 out:
-    if (IS_ERR(result)) {
-        if (load_proc && load_proc->task) {
-            task_free(load_proc->task);
+    if (result < 0) {
+        if (load_proc) {
+            process_terminate(load_proc);
         }
-        // TODO: free process data
     }
     return result;
 }

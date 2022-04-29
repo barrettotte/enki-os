@@ -1,5 +1,4 @@
-#include "../../kernel.h"
-#include "../../status.h"
+#include "../../include/kernel/status.h"
 #include "../../string/string.h"
 #include "heap.h"
 
@@ -25,7 +24,7 @@ static bool heap_validate_align(void* ptr) {
 }
 
 int heap_create(struct heap* heap, void* start_addr, void* end_addr, struct heap_table* table) {    
-    int status = OK;
+    int status = 0;
     if (!heap_validate_align(start_addr) || !heap_validate_align(end_addr)) {
         status = -EINVARG;
         goto out;  // bad alignment

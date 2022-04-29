@@ -3,9 +3,8 @@
 #include "../../disk/disk.h"
 #include "../../disk/disk_stream.h"
 #include "../../memory/heap/kheap.h"
-#include "../../config.h"
-#include "../../kernel.h"
-#include "../../status.h"
+#include "../../include/kernel/config.h"
+#include "../../include/kernel/status.h"
 #include "../../string/string.h"
 #include "fat16.h"
 
@@ -152,12 +151,12 @@ int fat16_get_dir_items(struct disk* disk, uint32_t dir_sector_start) {
     struct disk_stream* stream = fat_private->dir_read;
     int i = 0;
 
-    if (disk_stream_seek(stream, dir_start) != OK) {
+    if (disk_stream_seek(stream, dir_start)) {
         status = -EIO;
         goto out;
     }
     while (1) {
-        if (disk_stream_read(stream, &item, sizeof(item)) != OK) {
+        if (disk_stream_read(stream, &item, sizeof(item))) {
             status = -EIO;
             goto out;
         }
@@ -196,12 +195,12 @@ int fat16_get_root(struct disk* disk, struct fat_private* fat_private, struct fa
     }
 
     struct disk_stream* stream = fat_private->dir_read;
-    if (disk_stream_seek(stream, fat16_sector_to_abs(disk, root_pos)) != OK) {
+    if (disk_stream_seek(stream, fat16_sector_to_abs(disk, root_pos))) {
         status = -EIO;
         goto out;
     }
 
-    if (disk_stream_read(stream, dir, root_size) != OK) {
+    if (disk_stream_read(stream, dir, root_size)) {
         status = -EIO;
         goto out;
     }
@@ -219,7 +218,7 @@ out:
 }
 
 int fat16_resolve(struct disk* disk) {
-    int status = OK;
+    int status = 0;
     struct fat_private* fat_private = kzalloc(sizeof(struct fat_private));
     
     fat16_init_private(disk, fat_private);
@@ -231,7 +230,7 @@ int fat16_resolve(struct disk* disk) {
         status = -ENOMEM;
         goto out;  // failed to allocate memory
     }
-    if (disk_stream_read(stream, &fat_private->header, sizeof(fat_private->header)) != OK) {
+    if (disk_stream_read(stream, &fat_private->header, sizeof(fat_private->header))) {
         status = -EIO;
         goto out;  // 
     }
@@ -240,7 +239,7 @@ int fat16_resolve(struct disk* disk) {
         status = -EFSNOTUS;
         goto out;  // OS isn't in charge of this
     }
-    if (fat16_get_root(disk, fat_private, &fat_private->root) != OK) {
+    if (fat16_get_root(disk, fat_private, &fat_private->root)) {
         status = -EIO;
         goto out;  // 
     }
@@ -373,7 +372,7 @@ static int fat16_cluster_to_sector(struct fat_private* private, int cluster) {
 
 //
 static int fat16_read_internal_stream(struct disk* disk, struct disk_stream* stream, int cluster, int offset, int total, void* out) {
-    int status = OK;
+    int status = 0;
     struct fat_private* private = disk->fs_private;
     int cluster_size = private->header.primary.sect_per_cluster * disk->sector_size;
     
@@ -389,11 +388,11 @@ static int fat16_read_internal_stream(struct disk* disk, struct disk_stream* str
     int to_read = total > cluster_size ? cluster_size : total;
     
     status = disk_stream_seek(stream, start_pos);
-    if (status != OK) {
+    if (status) {
         goto out;
     }
     status = disk_stream_read(stream, out, to_read);
-    if (status != OK) {
+    if (status) {
         goto out;
     }
     
@@ -465,12 +464,12 @@ struct fat_dir* fat16_load_fat_dir(struct disk* disk, struct fat_dir_item* item)
     }
 
     status = fat16_read_internal(disk, cluster, 0x00, size, dir->item);
-    if (status != OK) {
+    if (status) {
         goto out;
     }
 
 out:
-    if (status != OK) {
+    if (status) {
         fat16_free_dir(dir);
     }
     return dir;
@@ -562,7 +561,7 @@ err_out:
     if (descriptor) {
         kfree(descriptor);
     }
-    return ERROR(err);
+    return (void*) err;
 }
 
 int fat16_read(struct disk* disk, void* desc, uint32_t size, uint32_t blocks, char* out) {
@@ -573,7 +572,7 @@ int fat16_read(struct disk* disk, void* desc, uint32_t size, uint32_t blocks, ch
 
     for (uint32_t i = 0; i < blocks; i++) {
         result = fat16_read_internal(disk, fat16_get_first_cluster(item), offset, size, out);
-        if (IS_ERR(result)) {
+        if (result < 0) {
             return result;
         }
         out += size;

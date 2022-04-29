@@ -1,5 +1,5 @@
-#include "../config.h"
-#include "../status.h"
+#include "../include/kernel/config.h"
+#include "../include/kernel/status.h"
 #include "../string/string.h"
 #include "../task/process.h"
 #include "../task/task.h"

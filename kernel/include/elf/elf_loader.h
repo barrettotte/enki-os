@@ -4,8 +4,8 @@
 #include <stddef.h>
 #include <stdint.h>
 
-#include "../../config.h"
 #include "elf.h"
+#include "../kernel/config.h"
 
 struct elf_file {
     char file_name[ENKI_MAX_PATH];

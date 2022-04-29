@@ -1,9 +1,10 @@
 #include "../idt/idt.h"
 #include "../io/io.h"
-#include "../kernel.h"
 #include "../task/task.h"
 #include "keyboard.h"
 #include "ps2.h"
+
+#include "../include/kernel/kernel.h"
 
 #include <stddef.h>
 #include <stdint.h>

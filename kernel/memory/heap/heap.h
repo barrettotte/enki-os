@@ -4,7 +4,7 @@
 #include <stdint.h>
 #include <stddef.h>
 
-#include "../../config.h"
+#include "../../include/kernel/config.h"
 
 #define HEAP_BLOCK_TABLE_ENTRY_FREE  0x00
 #define HEAP_BLOCK_TABLE_ENTRY_TAKEN 0x01

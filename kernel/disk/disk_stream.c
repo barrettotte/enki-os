@@ -1,4 +1,4 @@
-#include"../config.h"
+#include "../include/kernel/config.h"
 #include "../memory/heap/kheap.h"
 #include "disk_stream.h"
 
