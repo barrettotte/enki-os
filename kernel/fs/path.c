@@ -78,27 +78,25 @@ void path_free(struct path_root* root) {
 }
 
 struct path_root* path_parse(const char* path, const char* curr_dir) {
-    int result = 0;
     const char* tmp_path = path;
     struct path_root* root = 0;
 
     if (strlen(path) > ENKI_MAX_PATH) {
-        goto out;
+        return root;
     }
     
-    result = path_get_drive(&tmp_path);
-    if (result < 0) {
-        goto out;
+    int drive = path_get_drive(&tmp_path);
+    if (drive < 0) {
+        return root;
     }
-
-    root = path_create_root(result);
+    root = path_create_root(drive);
     if (!root) {
-        goto out;
+        return root;
     }
 
     struct path_part* first = path_parse_part(NULL, &tmp_path);
     if (!first) {
-        goto out;
+        return root;
     }
     root->first = first;
 
@@ -106,7 +104,5 @@ struct path_root* path_parse(const char* path, const char* curr_dir) {
     while (part) {
         part = path_parse_part(part, &tmp_path);
     }
-
-out:
     return root;
 }

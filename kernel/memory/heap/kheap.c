@@ -1,5 +1,5 @@
 #include "../../include/kernel/config.h"
-#include "../../include/kernel/tty.h"
+#include "../../include/kernel/panic.h"
 #include "../../string/string.h"
 #include "kheap.h"
 #include "heap.h"
@@ -13,9 +13,8 @@ void kheap_init() {
     kernel_heap_table.length = total_entries;
 
     void* end_addr = (void*) (ENKI_HEAP_ADDRESS + ENKI_HEAP_SIZE_BYTES);
-    int status = heap_create(&kernel_heap, (void*) ENKI_HEAP_ADDRESS, end_addr, &kernel_heap_table);
-    if (status < 0) {
-        tty_writestr("Failed to create heap\n"); // TODO: panic
+    if (heap_create(&kernel_heap, (void*) ENKI_HEAP_ADDRESS, end_addr, &kernel_heap_table) < 0) {
+        panic("kheap_init(): Failed to create heap.\n");
     }
 }
 

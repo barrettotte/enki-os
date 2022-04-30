@@ -68,33 +68,23 @@ int task_init(struct task* task, struct process* proc) {
 }
 
 struct task* task_new(struct process* process) {
-    int result = 0;
-
     struct task* task = kzalloc(sizeof(struct task));
     if (!task) {
-        result = -ENOMEM;
-        goto out;
+        return 0;
     }
-    result = task_init(task, process);
-    if (result) {
-        goto out;
+    if (task_init(task, process)) {
+        task_free(task);
+        return 0;
     }
 
     if (task_head == 0) {
         task_head = task;
-        task_tail = task;
         task_current = task;
-        goto out;
+    } else {
+        task_tail->next = task;
+        task->prev = task_tail;
     }
-    task_tail->next = task;
-    task->prev = task_tail;
     task_tail = task;
-
-out:
-    if (result < 0) {
-        task_free(task);
-        return 0;
-    }
     return task;
 }
 
@@ -148,17 +138,12 @@ void task_current_save_state(struct interrupt_frame* frame) {
 }
 
 int copy_str_from_task(struct task* task, void* virt_addr, void* phys_addr, int max) {
-    int result = 0;
-
     if (max >= PAGING_PAGE_SIZE) {
-        result = -EINVARG;
-        goto out;
+        return -EINVARG;
     }
-
     char* tmp = kzalloc(max);
     if (!tmp) {
-        result = -ENOMEM;
-        goto out;
+        return -ENOMEM;
     }
     uint32_t* task_dir = task->page_dir->directory_entry;
     uint32_t old_entry = paging_get(task_dir, tmp);
@@ -168,17 +153,13 @@ int copy_str_from_task(struct task* task, void* virt_addr, void* phys_addr, int 
     strncpy(tmp, virt_addr, max); // copy from user space task to kernel space buffer
     kernel_page();
 
-    result = paging_set(task_dir, tmp, old_entry); // restore task's page directory entry
-    if (result < 0) {
-        result = -EIO;
-        goto out_free;
+    // restore task's page directory entry
+    if (paging_set(task_dir, tmp, old_entry) < 0) {
+        kfree(tmp);
+        return -EIO;
     }
     strncpy(phys_addr, tmp, max); // copy from buffer to physical address
-
-out_free:
-    kfree(tmp);
-out:
-    return result;
+    return 0;
 }
 
 void* task_get_stack_item(struct task* task, int idx) {

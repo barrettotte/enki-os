@@ -31,9 +31,9 @@ int disk_stream_read(struct disk_stream* stream, void* out, int total) {
         read -= (offset + read) - ENKI_SECTOR_SIZE;
     }
 
-    int result = disk_read_block(stream->disk, sector, 1, buf);
-    if (result < 0) {
-        goto out;
+    int block = disk_read_block(stream->disk, sector, 1, buf);
+    if (block < 0) {
+        return block;
     }
 
     // read requested bytes into output buffer (max of one sector)
@@ -44,11 +44,9 @@ int disk_stream_read(struct disk_stream* stream, void* out, int total) {
 
     // if reading more than one sector, read from stream again
     if (overflow) {
-        result = disk_stream_read(stream, out, total - read);
+        block = disk_stream_read(stream, out, total - read);
     }
-
-out:
-    return result;
+    return block;
 }
 
 void disk_stream_close(struct disk_stream* stream) {

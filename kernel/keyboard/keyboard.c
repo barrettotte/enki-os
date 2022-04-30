@@ -12,10 +12,8 @@ void keyboard_init() {
 }
 
 int keyboard_insert(struct keyboard* kbd) {
-    int result = 0;
     if (kbd->init == 0) {
-        result = -EINVARG;  // no init function for keyboard
-        goto out;
+        return -EINVARG;  // no init function for keyboard
     }
 
     if (keyboard_tail) {
@@ -25,10 +23,7 @@ int keyboard_insert(struct keyboard* kbd) {
         keyboard_head = kbd;
         keyboard_tail = kbd;
     }
-    result = kbd->init();
-
-out:
-    return result;
+    return kbd->init();
 }
 
 static int keyboard_get_tail_idx(struct process* proc) {

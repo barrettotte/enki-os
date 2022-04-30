@@ -34,63 +34,50 @@ int process_switch(struct process* proc) {
 
 // load ELF file
 static int process_load_elf(const char* file_name, struct process* proc) {
-    int result = 0;
     struct elf_file* elf_file = 0;
-
-    result = elf_load(file_name, &elf_file);
+    int result = elf_load(file_name, &elf_file);
     if (result < 0) {
-        goto out;
+        return result;
     }
     proc->file_type = PROCESS_FILE_TYPE_ELF;
     proc->elf_file = elf_file;
-out:
     return result;
 }
 
 // load binary file
 static int process_load_bin(const char* file_name, struct process* proc) {
-    int result = 0;
-    void* pgm_data = 0;
-
     int fd = fopen(file_name, "r");
     if (!fd) {
-        result = -EIO;
-        goto out;
+        return -EIO;
     }
     
     struct file_stat stat;
-    result = fstat(fd, &stat);
+    int result = fstat(fd, &stat);
     if (result) {
-        goto out;
+        fclose(fd);
+        return result;
     }
 
-    pgm_data = kzalloc(stat.file_size);
+    void* pgm_data = kzalloc(stat.file_size);
     if (!pgm_data) {
-        result = -ENOMEM;
-        goto out;
+        fclose(fd);
+        return -ENOMEM;
     }
-
     if (fread(pgm_data, stat.file_size, 1, fd) != 1) {
-        result = -EIO;
-        goto out;
+        kfree(pgm_data);
+        fclose(fd);
+        return -EIO;
     }
 
     proc->file_type = PROCESS_FILE_TYPE_BIN;
     proc->addr = pgm_data;
     proc->size = stat.file_size;
-
-out:
-    if (result < 0 && pgm_data) {
-        kfree(pgm_data);
-    }
-    fclose(fd);
-    return result;
+    return 0;
 }
 
 // load data for process
 static int process_load_data(const char* file_name, struct process* proc) {
     int result = process_load_elf(file_name, proc);
-    
     if (result == -EINVFMT) {
         result = process_load_bin(file_name, proc);
     }
@@ -192,27 +179,27 @@ int process_load_slot(const char* file_name, struct process** proc, int proc_slo
     void* pgm_stack_ptr = 0;
 
     if (process_get(proc_slot) != 0) {
-        result = -EISTKN;
-        goto out;
+        return -EISTKN;
     }
     
     // load process data
     load_proc = kzalloc(sizeof(struct process));
     if (!load_proc) {
-        result = -ENOMEM;
-        goto out;
+        return -ENOMEM;
     }
     process_init(load_proc);
+
     result = process_load_data(file_name, load_proc);
     if (result < 0) {
-        goto out;
+        process_terminate(load_proc);
+        return result;
     }
 
     // load process stack
     pgm_stack_ptr = kzalloc(ENKI_USER_PGM_STACK_SIZE);
     if (!pgm_stack_ptr) {
-        result = -ENOMEM;
-        goto out;
+        process_terminate(load_proc);
+        return -ENOMEM;
     }
     load_proc->stack = pgm_stack_ptr;
     strncpy(load_proc->file_name, file_name, sizeof(load_proc->file_name));
@@ -221,25 +208,18 @@ int process_load_slot(const char* file_name, struct process** proc, int proc_slo
     // init task
     task = task_new(load_proc);
     if (!task) {
-        result = -ENOMEM;
-        goto out;
+        process_terminate(load_proc);
+        return -ENOMEM;
     }
     load_proc->task = task;
 
     result = process_map_memory(load_proc);
     if (result < 0) {
-        goto out;
+        return result;
     }
 
     *proc = load_proc;
     processes[proc_slot] = load_proc;
-    
-out:
-    if (result < 0) {
-        if (load_proc) {
-            process_terminate(load_proc);
-        }
-    }
     return result;
 }
 
@@ -256,30 +236,23 @@ static int process_find_free_alloc(struct process* proc) {
 void* process_malloc(struct process* proc, size_t size) {
     void* ptr = kzalloc(size);
     if (!ptr) {
-        goto out_err;
+        return 0;
     }
-
     int idx = process_find_free_alloc(proc);
     if (idx < 0) {
-        goto out_err;
+        kfree(ptr);
+        return 0;
     }
 
     int flags = PAGING_IS_WRITEABLE | PAGING_IS_PRESENT | PAGING_ACCESS_FROM_ALL;
     void* phys_end = paging_align_address(ptr + size);
-    int result = paging_map_to(proc->task->page_dir, ptr, ptr, phys_end, flags);
-    if (result < 0) {
-        goto out_err;
+    if (paging_map_to(proc->task->page_dir, ptr, ptr, phys_end, flags) < 0) {
+        kfree(ptr);
+        return 0;
     }
-
     proc->allocations[idx].ptr = ptr;
     proc->allocations[idx].size = size;
     return ptr;
-
-out_err:
-    if (ptr) {
-        kfree(ptr);
-    }
-    return 0;
 }
 
 // check if given process owns the provided pointer
@@ -317,13 +290,10 @@ void process_free(struct process* proc, void* to_free) {
     if (!alloc) {
         return;  // not this proc's pointer
     }
-    
     void* phys_end = paging_align_address(alloc->ptr + alloc->size);
-    int result = paging_map_to(proc->task->page_dir, alloc->ptr, alloc->ptr, phys_end, 0x00);
-    if (result < 0) {
+    if (paging_map_to(proc->task->page_dir, alloc->ptr, alloc->ptr, phys_end, 0x00) < 0) {
         return;
     }
-
     process_allocation_drop(proc, to_free);
     kfree(to_free);
 }
@@ -346,39 +316,31 @@ int process_count_cmd_args(struct cmd_arg* root_arg) {
 }
 
 int process_inject_args(struct process* proc, struct cmd_arg* root_arg) {
-    int result = 0;
     struct cmd_arg* current = root_arg;
     int i = 0;
 
     int argc = process_count_cmd_args(root_arg);
     if (argc == 0) {
-        result = -EIO;
-        goto out;
+        return -EIO;
     }
-
     char **argv = process_malloc(proc, argc * sizeof(const char*));
     if (!argv) {
-        result = -ENOMEM;
-        goto out;
+        return -ENOMEM;
     }
 
     while(current) {
         char* s_arg = process_malloc(proc, sizeof(current->arg));
         if (!s_arg) {
-            result = -ENOMEM;
-            goto out;
+            return -ENOMEM;
         }
         strncpy(s_arg, current->arg, sizeof(current->arg));
-
         argv[i] = s_arg;
         current = current->next;
         i++;
     }
     proc->args.argc = argc;
     proc->args.argv = argv;
-
-out:
-    return result;
+    return 0;
 }
 
 // free all allocations for a process
@@ -437,26 +399,20 @@ static void process_unlink(struct process* proc) {
 }
 
 int process_terminate(struct process* proc) {
-    int result = 0;
-    
-    result = process_free_allocations(proc);
+    int result = process_free_allocations(proc);
     if (result < 0) {
         return result;
     }
-
     result = process_free_pgm_data(proc);
     if (result < 0) {
         return result;
     }
-
     kfree(proc->stack);
 
     result = task_free(proc->task);
     if (result < 0) {
         return result;
     }
-
     process_unlink(proc);
-    
     return 0;
 }

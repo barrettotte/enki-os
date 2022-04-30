@@ -6,8 +6,7 @@ void enki_start() {
     struct process_args args;
     enki_process_args(&args);
 
-    int result = main(args.argc, args.argv);
-    if (result == 0) {
+    if (!main(args.argc, args.argv)) {
         // TODO: do something exit code
     }
 }

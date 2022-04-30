@@ -9,7 +9,7 @@
 
 #include <stdbool.h>
 
-const char elf_magic[] = {0x7F, 'E', 'L', 'F'};
+static const char elf_magic[] = {0x7F, 'E', 'L', 'F'};
 
 // verify ELF file has valid signature
 static bool elf_valid_signature(void* buf) {
@@ -64,7 +64,6 @@ struct elf32_shdr* elf_section_header(struct elf_header* header, int idx) {
     return &elf_sheader(header)[idx];
 }
 
-//
 char* elf_str_table(struct elf_header* header) {
     return (char*) header + elf_section_header(header, header->e_shstrndx)->sh_offset;
 }
@@ -85,16 +84,13 @@ void* elf_phys_end(struct elf_file* ef) {
     return ef->phys_end_addr;
 }
 
-
 void* elf_phdr_phys_addr(struct elf_file* ef, struct elf32_phdr* phdr) {
     return elf_memory(ef) + phdr->p_offset;
 }
 
-//
 int elf_validate_loaded(struct elf_header* header) {
     if (elf_valid_signature(header) && elf_valid_class(header) 
-        && elf_valid_encoding(header) && elf_has_program_header(header)) {
-
+      && elf_valid_encoding(header) && elf_has_program_header(header)) {
         return 0;
     }
     return -EINVFMT;
@@ -115,18 +111,13 @@ int elf_process_phdr_pt_load(struct elf_file* elf_file, struct elf32_phdr* phdr)
     return 0;
 }
 
-//
 int elf_process_pheader(struct elf_file* elf_file, struct elf32_phdr* phdr) {
-    int result = 0;
-    switch(phdr->p_type) {
-        case PT_LOAD:
-            result = elf_process_phdr_pt_load(elf_file, phdr);
-            break;
+    if (phdr->p_type == PT_LOAD) {
+        return elf_process_phdr_pt_load(elf_file, phdr);
     }
-    return result;
+    return 0;
 }
 
-//
 int elf_process_pheaders(struct elf_file* elf_file) {
     int result = 0;
     struct elf_header* header = elf_header(elf_file);
@@ -134,7 +125,6 @@ int elf_process_pheaders(struct elf_file* elf_file) {
     for (int i = 0; i < header->e_phnum; i++) {
         struct elf32_phdr* phdr = elf_program_header(header, i);
         result = elf_process_pheader(elf_file, phdr);
-        
         if (result < 0) {
             break;
         }
@@ -142,22 +132,13 @@ int elf_process_pheaders(struct elf_file* elf_file) {
     return result;
 }
 
-//
 int elf_process_loaded(struct elf_file* elf_file) {
-    int result = 0;
     struct elf_header* header = elf_header(elf_file);
-
-    result = elf_validate_loaded(header);
+    int result = elf_validate_loaded(header);
     if (result < 0) {
-        goto out;
+        return result;
     }
-
-    result = elf_process_pheaders(elf_file);
-    if (result < 0) {
-        goto out;
-    }
-out:
-    return result;
+    return elf_process_pheaders(elf_file);
 }
 
 int elf_load(const char* file_name, struct elf_file** file_out) {
@@ -166,31 +147,31 @@ int elf_load(const char* file_name, struct elf_file** file_out) {
 
     int result = fopen(file_name, "r");
     if (result <= 0) {
-        result = -EIO;
-        goto out;
+        fclose(fd);
+        return -EIO;
     }
     fd = result;
     
     struct file_stat stat;
     result = fstat(fd, &stat);
     if (result < 0) {
-        goto out;
+        fclose(fd);
+        return result;
     }
 
     elf_file->elf_memory = kzalloc(stat.file_size);
     result = fread(elf_file->elf_memory, stat.file_size, 1, fd);
     if (result < 0) {
-        goto out;
+        fclose(fd);
+        return result;
     }
 
     result = elf_process_loaded(elf_file);
     if (result < 0) {
-        goto out;
+        fclose(fd);
+        return result;
     }
     *file_out = elf_file;
-
-out:
-    fclose(fd);
     return result;
 }
 

@@ -100,73 +100,45 @@ FILE_MODE file_get_mode_from_str(const char* s) {
 }
 
 int fopen(const char* file_name, const char* mode) {
-    int status = 0;
-
     struct path_root* root = path_parse(file_name, NULL);
-    if (!root) {
-        status = -EINVARG;
-        goto out;
-    }
-    if (!root->first) {
-        status = -EINVARG; // i:/
-        goto out;
+    if (!root || !root->first) {
+        return -EINVARG;  // no drive number
     }
     
     struct disk* disk = disk_get(root->drive_no);
-    if (!disk) {
-        status = -EIO;
-        goto out; // drive doesn't exist
-    }
-    if (!disk->fs) {
-        status = -EIO;
-        goto out;
+    if (!disk || !disk->fs) {
+        return -EIO;  // drive doesn't exist
     }
 
     FILE_MODE fmode = file_get_mode_from_str(mode);
     if (fmode == FILE_MODE_INVALID) {
-        status = -EINVARG;
-        goto out;  // invalid file mode
+        return -EINVARG;  // invalid file mode
     }
 
     void* desc_private = disk->fs->open(disk, root->first, fmode);
     if (desc_private < 0) {
-        status = (int) desc_private;
-        goto out;
+        return (int) desc_private;
     }
 
     struct file_descriptor* desc = 0;
-    status = file_new_descriptor(&desc);
-    if (status < 0) {
-        goto out;
+    if (file_new_descriptor(&desc) < 0) {
+        return 0;
     }
     desc->fs = disk->fs;
     desc->private_data = desc_private;
     desc->disk = disk;
-    status = desc->index;
-out:
-    if (status < 0) {
-        status = 0;
-    }
-    return status;
+    return desc->index;
 }
 
 int fread(void* buf, uint32_t size, uint32_t blocks, int fd) {
-    int status = 0;
     if (size == 0 || blocks == 0 || fd < 1) {
-        status = -EINVARG;
-        goto out;
+        return -EINVARG;
     }
-
     struct file_descriptor* desc = file_get_descriptor(fd);
     if (!desc) {
-        status = -EINVARG;
-        goto out;
+        return -EINVARG;
     }
-
-    status = desc->fs->read(desc->disk, desc->private_data, size, blocks, (char *) buf);
-
-out:
-    return status;
+    return desc->fs->read(desc->disk, desc->private_data, size, blocks, (char *) buf);
 }
 
 int fclose(int fd) {
@@ -181,25 +153,17 @@ int fclose(int fd) {
 }
 
 int fseek(int fd, int offset, FILE_SEEK_MODE mode) {
-    int result = 0;
     struct file_descriptor* desc = file_get_descriptor(fd);
     if (!desc) {
-        result = -EIO;
-        goto out;
+        return -EIO;
     }
-    result = desc->fs->seek(desc->private_data, offset, mode);
-out:
-    return result;
+    return desc->fs->seek(desc->private_data, offset, mode);
 }
 
 int fstat(int fd, struct file_stat* stat) {
-    int result = 0;
     struct file_descriptor* desc = file_get_descriptor(fd);
     if (!desc) {
-        result = -EIO;
-        goto out;
+        return -EIO;
     }
-    result = desc->fs->stat(desc->disk, desc->private_data, stat);
-out:
-    return result;
+    return desc->fs->stat(desc->disk, desc->private_data, stat);
 }

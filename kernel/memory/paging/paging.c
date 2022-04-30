@@ -23,7 +23,6 @@ struct paging_chunk* paging_new(uint8_t flags) {
     }
     struct paging_chunk* chunk = kzalloc(sizeof(struct paging_chunk));
     chunk->directory_entry = dir;
-    
     return chunk;
 }
 
@@ -91,22 +90,14 @@ int paging_map_range(struct paging_chunk* dir, void* virt_addr, void* phys_addr,
 }
 
 int paging_map_to(struct paging_chunk* dir, void* virt_addr, void* phys_addr, void* phys_end, int flags) {
-    int result = 0;
-
     if (((uint32_t) virt_addr % PAGING_PAGE_SIZE) || ((uint32_t) phys_addr % PAGING_PAGE_SIZE)) {
-        result = -EINVARG;
-        goto out;
+        return -EINVARG;
     }
     if (((uint32_t) phys_end % PAGING_PAGE_SIZE) || ((uint32_t) phys_end < (uint32_t) phys_addr)) {
-        result = -EINVARG;
-        goto out;
+        return -EINVARG;
     }
-    uint32_t bytes = phys_end - phys_addr;
-    int pages = bytes / PAGING_PAGE_SIZE;
-    result = paging_map_range(dir, virt_addr, phys_addr, pages, flags);
-
-out:
-    return result;
+    int pages = (phys_end - phys_addr) / PAGING_PAGE_SIZE;
+    return paging_map_range(dir, virt_addr, phys_addr, pages, flags);
 }
 
 int paging_set(uint32_t* dir, void* virt_addr, uint32_t val) {
@@ -115,11 +106,11 @@ int paging_set(uint32_t* dir, void* virt_addr, uint32_t val) {
     }
     uint32_t dir_idx = 0;
     uint32_t tab_idx = 0;
+    
     int result = paging_get_indices(virt_addr, &dir_idx, &tab_idx);
     if (result < 0) {
         return result;
     }
-    
     uint32_t entry = dir[dir_idx];
     uint32_t* table = (uint32_t*)(entry & 0xFFFFF000);  // ignore last 12-bits
     table[tab_idx] = val;
@@ -139,6 +130,5 @@ uint32_t paging_get(uint32_t* dir, void* virt_addr) {
 void* paging_get_phys_addr(uint32_t* dir, void* virt_addr) {
     void *virt_aligned = (void*) paging_align_to_lower(virt_addr);
     void *offset = (void*)((uint32_t) virt_addr - (uint32_t) virt_aligned);
-
     return (void*)((paging_get(dir, virt_aligned) & 0xFFFFF000) + offset);
 }

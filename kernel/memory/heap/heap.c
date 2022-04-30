@@ -6,16 +6,13 @@
 
 // validate table was setup correctly
 static int heap_validate_table(void* start_addr, void* end_addr, struct heap_table* table) {
-    int status = 0;
     size_t table_size = (size_t)(end_addr - start_addr);
     size_t total_blocks = table_size / ENKI_HEAP_BLOCK_SIZE;
 
     if (table->length != total_blocks) {
-        status = -EINVARG;
-        goto out;
+        return -EINVARG;
     }
-out:
-    return status;
+    return 0;
 }
 
 // validate heap is properly aligned
@@ -24,27 +21,23 @@ static bool heap_validate_align(void* ptr) {
 }
 
 int heap_create(struct heap* heap, void* start_addr, void* end_addr, struct heap_table* table) {    
-    int status = 0;
     if (!heap_validate_align(start_addr) || !heap_validate_align(end_addr)) {
-        status = -EINVARG;
-        goto out;  // bad alignment
+        return -EINVARG; // bad alignment
     }
 
     memset(heap, 0x00, sizeof(struct heap));
     heap->start_addr = start_addr;
     heap->table = table;
 
-    status = heap_validate_table(start_addr, end_addr, table);
-    if (status < 0) {
-        goto out;  // bad table
+    int result = heap_validate_table(start_addr, end_addr, table);
+    if (result < 0) {
+        return result;  // bad table
     }
 
     // set entire heap as free memory
     size_t table_size = sizeof(HEAP_BLOCK_TABLE_ENTRY) * table->length;
     memset(table->entries, HEAP_BLOCK_TABLE_ENTRY_FREE, table_size);
-
-out:
-    return status;
+    return result;
 }
 
 // align value to proper block size
@@ -133,11 +126,10 @@ void* heap_malloc_blocks(struct heap* heap, uint32_t total_blocks) {
     int start_block = heap_get_start_block(heap, total_blocks);
 
     if (start_block < 0) {
-        goto out;
+        return addr;
     }
     addr = heap_block_to_address(heap, start_block);
     heap_mark_blocks_taken(heap, start_block, total_blocks);
-out:
     return addr;
 }
 

@@ -37,12 +37,10 @@ static struct gdt_structured gdt_structured[ENKI_TOTAL_GDT_SEGMENTS] = {
 
 static void test_multitask() {
     struct process* process = 0;
-    int status = 0;
     struct cmd_arg arg;
 
     // 1st process
-    status = process_load_switch("0:/nothing", &process);
-    if (status) {
+    if (process_load_switch("0:/nothing", &process)) {
         panic("Failed to load file nothing\n");
     }
     strcpy(arg.arg, "X");
@@ -50,8 +48,7 @@ static void test_multitask() {
     process_inject_args(process, &arg);
 
     // 2nd process
-    status = process_load_switch("0:/nothing", &process);
-    if (status) {
+    if (process_load_switch("0:/nothing", &process)) {
         panic("Failed to load file nothing\n");
     }
     strcpy(arg.arg, "A");
