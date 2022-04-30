@@ -2,8 +2,9 @@
 
 A basic x86 kernel to learn how operating systems get from BIOS to userland.
 
-This is my first dive into the deep world of operating systems. I hope to make 
-another kernel in the future using the things I learned here.
+This is my first dive into the deep world of operating systems. 
+I hope to make another kernel in the future using the things I learned here. 
+This one still needs a lot of care it probably won't get.
 
 ## Features / Goals
 
@@ -25,8 +26,6 @@ another kernel in the future using the things I learned here.
 ## TODO Items
 
 - TODO: comments on all C functions and asm
-- TODO: move `tty_*` functions out of `kernel.c`
-- TODO: reevaluate use of `goto`
 - TODO: refactor some paths to `libc`
 - TODO: rename `isr_80h` to `syscall`?
   - move `idt.c` `isr_80h` commands to `syscall`

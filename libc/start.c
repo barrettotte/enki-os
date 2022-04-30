@@ -7,6 +7,6 @@ void enki_start() {
     enki_process_args(&args);
 
     if (!main(args.argc, args.argv)) {
-        // TODO: do something exit code
+        // do something with exit code
     }
 }

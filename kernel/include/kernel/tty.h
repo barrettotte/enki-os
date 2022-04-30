@@ -3,11 +3,6 @@
 
 #include <stddef.h>
 
-// void tty_init();
-// void tty_putchar(char c);
-// void tty_write(const char* s, size_t size);
-// void tty_writestr(const char* s);
-
 // initialize terminal
 void tty_init();
 

@@ -18,7 +18,7 @@ struct gdt_structured {
     uint8_t type;
 };
 
-//
+// tell CPU where GDT is located and how large it is
 void gdt_load(struct gdt* gdt, int size);
 
 // convert gdt_structured to gdt
