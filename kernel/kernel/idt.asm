@@ -19,7 +19,6 @@ disable_interrupts:                         ; ***** disable interrupts *****
         ret                                 ; end disable_interrupts subroutine
 
 idt_load:                                   ; ***** Load IDT *****
-                                            ; TODO: args, return, signature
         push ebp                            ; store frame base pointer of calling function
         mov ebp, esp                        ; set function's own frame pointer
 

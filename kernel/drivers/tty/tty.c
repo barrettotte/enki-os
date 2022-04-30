@@ -8,18 +8,9 @@
 
 #define KEY_BACKSPACE 0x08
 
-static const size_t VGA_WIDTH = 80;
-static const size_t VGA_HEIGHT = 25;
-
-static uint16_t* const VGA_MEMORY = (uint16_t*) 0xB8000;
+static uint16_t* const VGA_MEMORY = (uint16_t*) VGA_MEMORY_START;
 static uint16_t tty_row;
 static uint16_t tty_col;
-
-// build video memory entry for terminal character
-static uint16_t tty_newchar(char c, char color) {
-    return (color << 8) | c; // little endian
-}
-
 
 // initialize terminal
 void tty_init() {
@@ -78,6 +69,9 @@ void tty_writechar(char c, char color) {
     if (tty_col >= VGA_WIDTH) {
         tty_col = 0;
         tty_row++;
+    }
+    if (tty_row >= VGA_HEIGHT) {
+        // TODO: scroll
     }
 }
 

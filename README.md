@@ -6,11 +6,14 @@ This is my first dive into the deep world of operating systems.
 I hope to make another kernel in the future using the things I learned here. 
 This one still needs a lot of care it probably won't get.
 
+Named after [Enki](https://en.wikipedia.org/wiki/Enki), 
+Sumerian god of water, knowledge, crafts, and creation. 
+
 ## Features / Goals
 
 - [x] Custom bootloader
 - [x] FAT-16 file system (except `fwrite`)
-- [x] Keyboard driver
+- [x] PS/2 keyboard driver
 - [x] Static ELF file loading
 - [x] Partial LibC
 - [x] Process create/manage via TSS
@@ -26,10 +29,9 @@ This one still needs a lot of care it probably won't get.
 
 ## TODO Items
 
-- TODO: comments on all C functions and asm
-
 - Shift key
 - Scrolling terminal
+- Clear terminal
 - Init Floating Point Unit (FPU)
 - Reboot command
 - Gather system info and print on startup (memory, timer, etc)
@@ -46,6 +48,8 @@ This one still needs a lot of care it probably won't get.
 - ELF file loading loads entire file into heap memory...
 - Only supports loading static ELF files
 - Simple multitasking via timer
+- Limited process control (no fork or exec)
+- Probably a lot more I'm forgetting...
 
 ## References
 
@@ -54,5 +58,6 @@ This one still needs a lot of care it probably won't get.
 - [x86 and amd64 instruction set](https://www.felixcloutier.com/x86/)
 - [Ralf Brown Interrupt List](https://www.ctyme.com/rbrown.htm)
 - [Operating Systems: Three Easy Pieces](https://pages.cs.wisc.edu/~remzi/OSTEP/)
+- [Little Book About OS Development](https://littleosbook.github.io/)
 - [PC Interrupts: A Programmer's Reference to BIOS, DOS, and Third-Party Calls](https://www.amazon.com/PC-Interrupts-Programmers-Reference-Third-Party/dp/0201624850)
 - [Executable and Linkable Format (ELF)](https://refspecs.linuxfoundation.org/elf/elf.pdf)
