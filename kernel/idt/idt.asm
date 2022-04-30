@@ -1,23 +1,23 @@
         bits 32                             ;
         section .asm                        ;
         
-        global enable_interrupts            ;
-        global disable_interrupts           ;
-        global idt_load                     ;
-        global no_interrupt                 ;
-        global isr_80h_wrapper              ;
-        global interrupt_ptr_table          ;
+        global enable_interrupts            ; void enable_interrupts()
+        global disable_interrupts           ; void disable_interrupts()
+        global idt_load                     ; void idt_load(struct idtr_ptr* ptr)
+        global no_interrupt                 ; void no_interrupt()
+        global isr_80h_wrapper              ; void isr_80h_wrapper()
+        global interrupt_ptr_table          ; void* interrupt_ptr_table[ENKI_TOTAL_INTERRUPTS]
 
         extern no_interrupt_handler         ;
         extern isr_80h_handler              ;
         extern interrupt_handler            ;
 
 enable_interrupts:                          ; ***** enable interrupts *****
-        sti                                 ;
+        sti                                 ; enable interrupts
         ret                                 ; end enable_interrupts subroutine
 
 disable_interrupts:                         ; ***** disable interrupts *****
-        cli                                 ;
+        cli                                 ; clear interrupts
         ret                                 ; end disable_interrupts subroutine
 
 idt_load:                                   ; ***** Load IDT *****
@@ -33,7 +33,7 @@ idt_load:                                   ; ***** Load IDT *****
 
 no_interrupt:                               ; ***** no interrupt *****
         pushad                              ; store all GPRs
-        call no_interrupt_handler           ;
+        call no_interrupt_handler           ; 
         popad                               ; restore GPRs
         iret                                ; end no_interrupt subroutine; return from interrupt
 

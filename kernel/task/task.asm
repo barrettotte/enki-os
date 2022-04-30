@@ -12,10 +12,10 @@ task_return:                                ; ***** change CPU state and return 
         push dword [ebx + 44]               ; data/stack selector
         push dword [ebx + 40]               ; stack pointer
         
-        pushf                               ; 
-        pop eax                             ; 
+        pushf                               ; store flags
+        pop eax                             ; load flags
         or eax, 0x200                       ; enable interrupts (after iret)
-        push eax                            ; 
+        push eax                            ; store flags
 
         push dword [ebx + 32]               ; code segment
         push dword [ebx + 28]               ; instruction pointer (virtual address)
@@ -38,14 +38,14 @@ restore_gpr:                                ; ***** restore general purpose regi
         push ebp                            ; store base pointer
         mov ebp, esp                        ; set base pointer
 
-        mov ebx, [ebp + 8]                  ;
-        mov edi, [ebx]                      ;
-        mov esi, [ebx + 4]                  ;
-        mov ebp, [ebx + 8]                  ;
-        mov edx, [ebx + 16]                 ;
-        mov ecx, [ebx + 20]                 ;
-        mov eax, [ebx + 24]                 ;
-        mov ebx, [ebx + 12]                 ;
+        mov ebx, [ebp + 8]                  ; restore ebx
+        mov edi, [ebx]                      ; restore edi
+        mov esi, [ebx + 4]                  ; restore esi
+        mov ebp, [ebx + 8]                  ; restore ebp
+        mov edx, [ebx + 16]                 ; restore edx
+        mov ecx, [ebx + 20]                 ; restore ecx
+        mov eax, [ebx + 24]                 ; restore eax
+        mov ebx, [ebx + 12]                 ; restore ebx
 
         add esp, 4                          ; restore stack pointer
         ret                                 ; end restore_gpr subroutine

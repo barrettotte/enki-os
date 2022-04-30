@@ -1,7 +1,7 @@
         bits 32                             ;
         section .asm                        ;
         
-        global gdt_load                     ;
+        global gdt_load                     ; void gdt_load(struct gdt* gdt, int size)
         
 gdt_load:                                   ; ***** load GDT *****
         mov eax, [esp + 4]                  ; get pointer to GDT

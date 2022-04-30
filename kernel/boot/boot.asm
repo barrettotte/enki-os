@@ -106,10 +106,10 @@ gdt_descriptor:                             ;
         bits 32                             ; ***** protected mode *****
 load_32:                                    ;
         mov eax, 1                          ; start sector (skip 0=bootloader)
-        mov ecx, 100                        ; sectors of kernel   TODO: constant?
-        mov edi, 0x0100000                  ; kernel entry        TODO: constant?
+        mov ecx, 100                        ; sectors of kernel
+        mov edi, 0x0100000                  ; kernel entry
         call ata_lba_read                   ; read kernel from hard disk
-        jmp CODE_SEG:0x0100000              ; jump into kernel    TODO: constant?
+        jmp CODE_SEG:0x0100000              ; jump into kernel
 
 ata_lba_read:                               ; ***** ATA LBA Read *****
         mov ebx, eax                        ; save LBA
@@ -143,8 +143,8 @@ ata_lba_read:                               ; ***** ATA LBA Read *****
 .next_sector:                               ;
         push ecx                            ; stash sector_count
 .try_read:                                  ;
-        mov dx, 0x1F7                       ; 
-        in al, dx                           ; 
+        mov dx, 0x1F7                       ; set port
+        in al, dx                           ; read from port
         test al, 8                          ; check if read was successful
         jz .try_read                        ; repeat read until success
 
