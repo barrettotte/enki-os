@@ -2,9 +2,10 @@ OS   := enki
 ARCH := i686
 FMT  := elf
 
-BIN_DIR := bin
-OBJ_DIR := build
-SRC_DIR := .
+BIN_DIR  := bin
+OBJ_DIR  := build
+SRC_DIR  := .
+LIBC_DIR := ../libc
 
 TARGET  := $(BIN_DIR)/kernel.bin
 HEADERS := $(shell find $(SRC_DIR)/* -type f -iname "*.h")
@@ -15,6 +16,7 @@ SOURCES     := $(shell find $(SRC_DIR)/* $(SRC_EXCL) $(SRC_TYPES))
 OBJECTS     := $(foreach OBJECT, $(patsubst %.asm, %.asm.o, $(patsubst %.c, %.o, $(patsubst %.cpp, %.o, $(SOURCES)))), $(OBJ_DIR)/$(OBJECT))
 
 KERNEL_FULL := $(OBJ_DIR)/kernel_full.o
+LIBK_BIN    := $(LIBC_DIR)/bin/libk
 
 CROSS := "$(HOME)/opt/cross/bin/$(ARCH)-$(FMT)"
 
@@ -31,7 +33,7 @@ CC_FLAGS := -g -ffreestanding \
 			-Werror -Wno-unused-function -Wno-unused-label -Wno-cpp -Wno-unused-parameter \
 			-nostdlib -nostartfiles -nodefaultlibs \
 			-Wall -O0
-CC_INCLUDES := -I $(SRC_DIR)
+CC_INCLUDES := -I $(LIBC_DIR)/include -I include
 
 CPP := $(CROSS)-g++
 CPP_FLAGS := -g -ffreestanding \
@@ -44,7 +46,7 @@ $(TARGET): $(OBJECTS)
 	$(AS) -f bin $(SRC_DIR)/boot/boot.asm -o $(BIN_DIR)/boot.bin
 	$(AS) $(AS_FLAGS) $(SRC_DIR)/kernel/kernel.asm -o $(OBJ_DIR)/kernel/kernel.asm.o
 	@echo "linking...objects: $+"
-	$(LD) $(LD_FLAGS) $(OBJ_DIR)/kernel/kernel.asm.o $+ -o $(KERNEL_FULL)
+	$(LD) $(LD_FLAGS) $(OBJ_DIR)/kernel/kernel.asm.o $+ $(LIBK_BIN) -o $(KERNEL_FULL)
 	$(CC) $(CC_FLAGS) -T $(SRC_DIR)/linker.ld -o $@ -ffreestanding -O0 -nostdlib $(KERNEL_FULL)
 
 $(OBJ_DIR)/%.asm.o: %.asm
@@ -64,7 +66,7 @@ $(OBJ_DIR)/%.o: %.cpp
 
 all:	clean build
 
-build:	$(TARGET)
-
 clean:
-	rm -rf $(BIN_DIR)/* $(OBJ_DIR)/*
+	@rm -rf $(BIN_DIR)/* $(OBJ_DIR)/*
+
+build:	$(TARGET)

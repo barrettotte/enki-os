@@ -13,6 +13,7 @@ This one still needs a lot of care it probably won't get.
 - [x] Keyboard driver
 - [x] Static ELF file loading
 - [x] Partial LibC
+- [x] Process create/manage via TSS
 - [x] Userland with basic shell
 - [x] Basic Multitasking (timer based)
 
@@ -26,21 +27,21 @@ This one still needs a lot of care it probably won't get.
 ## TODO Items
 
 - TODO: comments on all C functions and asm
-- TODO: refactor some paths to `libc`
-- TODO: rename `isr_80h` to `syscall`?
-  - move `idt.c` `isr_80h` commands to `syscall`
-  - move `isr_80h` subroutines in `idt.asm` into `syscall.asm`
 
-
-- TODO: gather system info and print on startup (memory, timer, etc)
-- TODO: refactor includes to be based on project dir instead of relative...
-- TODO: dockerfile? Github action?
+- Shift key
+- Scrolling terminal
+- Init Floating Point Unit (FPU)
+- Reboot command
+- Gather system info and print on startup (memory, timer, etc)
+- Stack smash protector
+- Multiboot
+- Dockerfile with toolchain installed? Github action?
 
 ## Limitations
 
 - Lazy A20 line enable; Could potentially fail on some systems
 - Memory fragmentation
-- Only one drive supported (master)
+- Only one drive supported (master - drive 0)
 - Missing FAT16 write
 - ELF file loading loads entire file into heap memory...
 - Only supports loading static ELF files

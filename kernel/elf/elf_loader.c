@@ -1,12 +1,10 @@
-#include "../include/elf/elf_loader.h"
-#include "../include/kernel/config.h"
-#include "../include/kernel/status.h"
-
-#include "../fs/file.h"
-#include "../memory/heap/kheap.h"
-#include "../memory/paging/paging.h"
-#include "../string/string.h"
-
+#include <elf/elf_loader.h>
+#include <fs/file.h>
+#include <kernel/config.h>
+#include <kernel/status.h>
+#include <memory/kheap.h>
+#include <memory/paging.h>
+#include <string.h>
 #include <stdbool.h>
 
 static const char elf_magic[] = {0x7F, 'E', 'L', 'F'};

@@ -2,25 +2,24 @@ OS   := enki
 ARCH := i686
 FMT  := elf
 
-BIN_DIR := bin
-MNT_DIR := /mnt/$(OS)
+KERNEL_DIR  := kernel
+LIBC_DIR    := libc
+PGM_DIR     := programs
+BIN_DIR     := bin
+MNT_DIR     := /mnt/$(OS)
 SCRIPTS_DIR := scripts
 
-KERNEL_DIR := kernel
-LIBC_DIR := libc
-USER_DIR := userspace
-
-BOOT_BIN := $(KERNEL_DIR)/bin/boot.bin
+BOOT_BIN   := $(KERNEL_DIR)/bin/boot.bin
 KERNEL_BIN := $(KERNEL_DIR)/bin/kernel.bin
 KERNEL_OBJ := $(KERNEL_DIR)/obj/kernel_full.o
-ENKI_BIN := $(BIN_DIR)/enki.bin
+ENKI_BIN   := $(BIN_DIR)/enki.bin
+PGMS       := shell nothing
 
 KERNEL_ENTRY := 0x100000
-USER_ENTRY   := 0x400000
+PGM_ENTRY    := 0x400000
+1MB          := 1048576
 
-1MB := 1048576
-
-QEMU := qemu-system-i386
+QEMU       := qemu-system-i386
 QEMU_FLAGS := -drive file=$(ENKI_BIN),format=raw
 
 .PHONY:	.FORCE
@@ -29,18 +28,16 @@ QEMU_FLAGS := -drive file=$(ENKI_BIN),format=raw
 all:	build img mount unmount
 
 build:	clean
-	@mkdir -p $(BIN_DIR)
-	$(MAKE) -C $(KERNEL_DIR) all
 	$(MAKE) -C $(LIBC_DIR) all
-	$(MAKE) -C $(USER_DIR)/asm-test all
-	$(MAKE) -C $(USER_DIR)/nothing all
-	$(MAKE) -C $(USER_DIR)/shell all
+	$(MAKE) -C $(KERNEL_DIR) all
+	$(foreach pgm, $(PGMS), $(MAKE) -C $(PGM_DIR)/$(pgm) all ; )
 
 clean:
-	rm -rf $(BIN_DIR)/*
+	@rm -rf $(BIN_DIR)/*
 
 img:
 	@echo "building image..."
+	@mkdir -p $(BIN_DIR)
 	dd if=$(BOOT_BIN) status=none >> $(ENKI_BIN)
 	dd if=$(KERNEL_BIN) status=none >> $(ENKI_BIN)
 	dd if=/dev/zero bs=$(1MB) count=16 status=none>> $(ENKI_BIN)
@@ -48,9 +45,7 @@ img:
 mount:
 	@sudo mkdir -p $(MNT_DIR)
 	@sudo mount -t vfat $(ENKI_BIN) $(MNT_DIR)
-	@sudo cp $(USER_DIR)/nothing/bin/nothing $(MNT_DIR)
-	@sudo cp $(USER_DIR)/asm-test/bin/asm-test $(MNT_DIR)
-	@sudo cp $(USER_DIR)/shell/bin/shell $(MNT_DIR)
+	@$(foreach pgm, $(PGMS), sudo cp $(PGM_DIR)/$(pgm)/bin/$(pgm) $(MNT_DIR) ; )
 
 unmount:
 	@sudo umount $(MNT_DIR)
@@ -64,9 +59,9 @@ debug_kernel:	all
 		-ex 'break kernel_main' \
 		-ex 'target remote | $(QEMU) $(QEMU_FLAGS) -S -gdb stdio'
 
-debug_userspace:	all
+debug_shell:	all
 	@gdb -ex 'set confirm off' \
-		-ex 'add-symbol-file $(USER_DIR)/shell/bin/shell.elf $(USER_ENTRY)' \
+		-ex 'add-symbol-file $(PGM_DIR)/shell/bin/shell $(PGM_ENTRY)' \
 		-ex 'break main' \
 		-ex 'target remote | $(QEMU) $(QEMU_FLAGS) -S -gdb stdio'
 

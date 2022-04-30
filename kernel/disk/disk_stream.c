@@ -1,7 +1,6 @@
-#include "../include/kernel/config.h"
-#include "../memory/heap/kheap.h"
-#include "disk_stream.h"
-
+#include <disk/disk_stream.h>
+#include <kernel/config.h>
+#include <memory/kheap.h>
 #include <stdbool.h>
 
 struct disk_stream* disk_stream_new(int disk_id) {

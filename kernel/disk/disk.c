@@ -1,8 +1,8 @@
-#include "../io/io.h"
-#include "../string/string.h"
-#include "../include/kernel/config.h"
-#include "../include/kernel/status.h"
-#include "disk.h"
+#include <disk/disk.h>
+#include <kernel/config.h>
+#include <kernel/io.h>
+#include <kernel/status.h>
+#include <string.h>
 
 struct disk disk; // primary hard disk
 

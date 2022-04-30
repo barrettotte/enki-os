@@ -1,12 +1,12 @@
-#include "../fs/file.h"
-#include "../include/elf/elf_loader.h"
-#include "../memory/heap/kheap.h"
-#include "../memory/paging/paging.h"
-#include "../string/string.h"
-#include "../include/kernel/panic.h"
-#include "../include/kernel/status.h"
-#include "process.h"
-#include "task.h"
+#include <elf/elf_loader.h>
+#include <fs/file.h>
+#include <kernel/panic.h>
+#include <kernel/status.h>
+#include <memory/kheap.h>
+#include <memory/paging.h>
+#include <string.h>
+#include <task/process.h>
+#include <task/task.h>
 
 struct process* process_current = 0;
 static struct process* processes[ENKI_MAX_PROCESSES] = {};

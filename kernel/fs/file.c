@@ -1,11 +1,11 @@
-#include "../include/kernel/config.h"
-#include "../include/kernel/panic.h"
-#include "../include/kernel/status.h"
-#include "../disk/disk.h"
-#include "../memory/heap/kheap.h"
-#include "../string/string.h"
-#include "fat/fat16.h"
-#include "file.h"
+#include <disk/disk.h>
+#include <fs/fat16.h>
+#include <fs/file.h>
+#include <kernel/config.h>
+#include <kernel/panic.h>
+#include <kernel/status.h>
+#include <memory/kheap.h>
+#include <string.h>
 
 struct file_system* file_systems[ENKI_MAX_FILE_SYSTEMS];
 struct file_descriptor* file_descriptors[ENKI_MAX_FILE_DESCRIPTORS];

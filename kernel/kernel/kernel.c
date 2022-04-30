@@ -1,27 +1,25 @@
-#include "include/kernel/config.h"
-#include "include/kernel/kernel.h"
-#include "include/kernel/panic.h"
-#include "idt/idt.h"
-#include "io/io.h"
-#include "disk/disk.h"
-#include "disk/disk_stream.h"
-#include "fs/path.h"
-#include "fs/file.h"
-#include "gdt/gdt.h"
-#include "isr_80h/isr_80h.h"
-#include "keyboard/keyboard.h"
-#include "memory/heap/kheap.h"
-#include "memory/paging/paging.h"
-#include "include/kernel/status.h"
-#include "string/string.h"
-#include "task/task.h"
-#include "task/process.h"
-#include "task/tss.h"
-
-#include "include/kernel/tty.h"
-
+#include <disk/disk.h>
+#include <disk/disk_stream.h>
+#include <drivers/keyboard.h>
+#include <drivers/tty.h>
+#include <fs/file.h>
+#include <fs/path.h>
+#include <kernel/config.h>
+#include <kernel/kernel.h>
+#include <kernel/gdt.h>
+#include <kernel/idt.h>
+#include <kernel/io.h>
+#include <kernel/panic.h>
+#include <kernel/status.h>
+#include <kernel/syscall.h>
+#include <memory/kheap.h>
+#include <memory/paging.h>
 #include <stddef.h>
 #include <stdint.h>
+#include <string.h>
+#include <task/task.h>
+#include <task/process.h>
+#include <task/tss.h>
 
 static struct paging_chunk *kernel_chunk = 0;
 static struct tss tss;
@@ -94,7 +92,7 @@ void kernel_main() {
     paging_switch(kernel_chunk);
     enable_paging();
 
-    isr_80h_register_cmds();
+    syscall_register_all();
 
     keyboard_init();
 

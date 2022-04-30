@@ -1,12 +1,12 @@
-#include "../idt/idt.h"
-#include "../include/elf/elf_loader.h"
-#include "../memory/heap/kheap.h"
-#include "../memory/paging/paging.h"
-#include "../include/kernel/kernel.h"
-#include "../include/kernel/panic.h"
-#include "../include/kernel/status.h"
-#include "../string/string.h"
-#include "task.h"
+#include <elf/elf_loader.h>
+#include <kernel/idt.h>
+#include <kernel/kernel.h>
+#include <kernel/panic.h>
+#include <kernel/status.h>
+#include <memory/kheap.h>
+#include <memory/paging.h>
+#include <string.h>
+#include <task/task.h>
 
 struct task* task_current = 0;
 struct task* task_head = 0;
