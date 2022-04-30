@@ -145,7 +145,7 @@ int copy_str_from_task(struct task* task, void* virt_addr, void* phys_addr, int 
     if (!tmp) {
         return -ENOMEM;
     }
-    uint32_t* task_dir = task->page_dir->directory_entry;
+    uint32_t* task_dir = task->page_dir->entries;
     uint32_t old_entry = paging_get(task_dir, tmp);
     
     paging_map(task->page_dir, tmp, tmp, PAGING_IS_WRITEABLE | PAGING_IS_PRESENT | PAGING_ACCESS_FROM_ALL);
@@ -173,7 +173,7 @@ void* task_get_stack_item(struct task* task, int idx) {
 }
 
 void* task_virt_to_phys_addr(struct task* task, void* virt_addr) {
-    return paging_get_phys_addr(task->page_dir->directory_entry, virt_addr);
+    return paging_get_phys_addr(task->page_dir->entries, virt_addr);
 }
 
 void task_switch_next() {

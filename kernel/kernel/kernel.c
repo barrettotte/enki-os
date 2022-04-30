@@ -21,7 +21,7 @@
 #include <task/process.h>
 #include <task/tss.h>
 
-static struct paging_chunk *kernel_chunk = 0;
+static struct paging_page_dir *kernel_page_dir = 0;
 static struct tss tss;
 static struct gdt gdt_real[ENKI_TOTAL_GDT_SEGMENTS];
 static struct gdt_structured gdt_structured[ENKI_TOTAL_GDT_SEGMENTS] = {
@@ -33,30 +33,30 @@ static struct gdt_structured gdt_structured[ENKI_TOTAL_GDT_SEGMENTS] = {
     {.base = (uint32_t)&tss, .limit=sizeof(tss), .type=0xE9},  // task switching segment
 };
 
+// simple test for multitasking - will alternate 'X' and 'A' endlessly via timer
 static void test_multitask() {
-    struct process* process = 0;
+    struct process* proc = 0;
     struct cmd_arg arg;
 
     // 1st process
-    if (process_load_switch("0:/nothing", &process)) {
+    if (process_load_switch("0:/nothing", &proc)) {
         panic("Failed to load file nothing\n");
     }
     strcpy(arg.arg, "X");
-    arg.next = 0x00;
-    process_inject_args(process, &arg);
+    arg.next = 0;
+    process_inject_args(proc, &arg);
 
     // 2nd process
-    if (process_load_switch("0:/nothing", &process)) {
+    if (process_load_switch("0:/nothing", &proc)) {
         panic("Failed to load file nothing\n");
     }
     strcpy(arg.arg, "A");
-    arg.next = 0x00;
-    process_inject_args(process, &arg);
+    arg.next = 0;
+    process_inject_args(proc, &arg);
 }
 
 static void load_shell() {
     struct process* proc = 0;
-
     if (process_load_switch("0:/shell", &proc)) {
         panic("Failed to load shell process\n");
     }
@@ -64,7 +64,7 @@ static void load_shell() {
 
 void kernel_page() {
     kernel_registers();
-    paging_switch(kernel_chunk);
+    paging_switch(kernel_page_dir);
 }
 
 void kernel_main() {
@@ -88,15 +88,13 @@ void kernel_main() {
 
     // paging
     uint8_t paging_flags = PAGING_IS_WRITEABLE | PAGING_IS_PRESENT | PAGING_ACCESS_FROM_ALL;
-    kernel_chunk = paging_new(paging_flags);
-    paging_switch(kernel_chunk);
+    kernel_page_dir = paging_new(paging_flags);
+    paging_switch(kernel_page_dir);
     enable_paging();
 
     syscall_register_all();
-
     keyboard_init();
 
-    test_multitask(); // TODO: test
-    // load_shell();
+    load_shell();
     task_run_first();
 }

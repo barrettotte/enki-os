@@ -24,7 +24,7 @@ struct registers {
 };
 
 struct task {
-    struct paging_chunk* page_dir;
+    struct paging_page_dir* page_dir;
     struct registers registers;
     struct task* next;
     struct task* prev;

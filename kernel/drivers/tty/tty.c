@@ -6,6 +6,8 @@
 
 #include "vga.h"
 
+#define KEY_BACKSPACE 0x08
+
 static const size_t VGA_WIDTH = 80;
 static const size_t VGA_HEIGHT = 25;
 
@@ -36,7 +38,7 @@ void tty_putchar(int x, int y, char c, char color) {
     VGA_MEMORY[(y * VGA_WIDTH) + x] = vga_entry(c, color);
 }
 
-void tty_backspace() {
+static void tty_backspace() {
     if (tty_row == 0 && tty_col == 0) {
         return;
     }
@@ -49,15 +51,25 @@ void tty_backspace() {
     tty_col--;
 }
 
+static void tty_newline() {
+    tty_row++;
+    tty_col = 0;
+}
+
+static void tty_tab() {
+    for (int i = 0; i < 4; i++) {
+        tty_writechar(' ', VGA_COLOR_WHITE);
+    }
+}
+
 void tty_writechar(char c, char color) {
-    if (c == '\n') {
-        tty_row++;
-        tty_col = 0;
-        return;
-    } 
-    if (c == 0x08) {
-        tty_backspace();
-        return;
+    switch (c) {
+        case '\n':
+            return tty_newline();
+        case '\t':
+            return tty_tab();
+        case KEY_BACKSPACE:
+            return tty_backspace();
     }
 
     tty_putchar(tty_col, tty_row, c, color);
@@ -71,6 +83,6 @@ void tty_writechar(char c, char color) {
 
 void tty_writestr(const char *s) {
     for (int i = 0; i < strlen(s); i++) {
-        tty_writechar(s[i], 15);
+        tty_writechar(s[i], VGA_COLOR_WHITE);
     }
 }

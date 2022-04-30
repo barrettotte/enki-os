@@ -9,9 +9,6 @@ void tty_init();
 // place char at (x,y) with color
 void tty_putchar(int x, int y, char c, char color);
 
-// backspace in terminal
-void tty_backspace();
-
 // write char to terminal
 void tty_writechar(char c, char color);
 

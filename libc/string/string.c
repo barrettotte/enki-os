@@ -66,34 +66,33 @@ size_t strnlen(const char* s, int n) {
     return i;
 }
 
-int istrncmp(const char* s1, const char* s2, int n) {
-    unsigned char c1, c2;
-    while (n-- > 0) {
-        c1 = (unsigned char)*s1++;
-        c2 = (unsigned char)*s2++;
-        if (c1 != c2 && tolower(c1) != tolower(c2)) {
-            return c1 - c2;
-        }
-        if (c1 == '\0') {
-            return 0;
-        }
-    }
-    return 0;
+int strcmp(const char* s1, const char* s2) {
+    int a = 0, b = 0;
+    do {
+        a = *s1++;
+        b = *s2++;
+    } while (a && b && a == b);
+    return a - b;
 }
 
 int strncmp(const char* s1, const char* s2, int n) {
-    unsigned char c1, c2;
-    while (n-- > 0) {
-        c1 = (unsigned char)*s1++;
-        c2 = (unsigned char)*s2++;
-        if (c1 != c2) {
-            return c1 - c2;
-        }
-        if (c1 == '\0') {
-            return 0;
-        }
+    int a = 0, b = 0;
+    while (n && a == b) {
+        a = *s1++;
+        b = *s2++;
+        n--;
     }
-    return 0;
+    return a - b;
+}
+
+int istrncmp(const char* s1, const char* s2, int n) {
+    int a = 0, b = 0;
+    while (n && a == b) {
+        a = tolower(*s1++);
+        b = tolower(*s2++);
+        n--;
+    }
+    return a - b;
 }
 
 char* strcpy(char* dst, const char* src) {

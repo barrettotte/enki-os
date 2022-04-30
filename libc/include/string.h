@@ -26,10 +26,13 @@ size_t strlen(const char* s);
 // calculate length of string up to n
 size_t strnlen(const char* s, int n);
 
-// compare two strings insensitive
+// compare two strings
+int strcmp(const char* s1, const char* s2);
+
+// compare two strings insensitive up to given length
 int istrncmp(const char* s1, const char* s2, int n);
 
-// compare two strings
+// compare two strings up to given length
 int strncmp(const char* s1, const char* s2, int n);
 
 // copy string from source to destination

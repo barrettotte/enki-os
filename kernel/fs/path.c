@@ -32,7 +32,7 @@ static struct path_root* path_create_root(int drive_no) {
 static const char* path_get_part(const char** path) {
     char* part = kzalloc(ENKI_MAX_PATH);
     int i = 0;
-    while (**path != '/' && **path != 0x00) {
+    while (**path != '/' && **path != 0) {
         part[i] = **path;
         *path += 1;
         i++;
@@ -58,7 +58,7 @@ struct path_part* path_parse_part(struct path_part* last_part, const char** path
 
     struct path_part* part = kzalloc(sizeof(struct path_part));
     part->part = part_str;
-    part->next = 0x00;
+    part->next = 0;
 
     if (last_part) {
         last_part->next = part;

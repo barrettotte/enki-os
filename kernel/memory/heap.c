@@ -95,7 +95,6 @@ void heap_mark_blocks_taken(struct heap* heap, int start_block, int total_blocks
     if (total_blocks > 1) {
         entry |= HEAP_BLOCK_HAS_NEXT;
     }
-
     // mark each block
     for (int i = start_block; i <= end_block; i++) {
         heap->table->entries[i] = entry;

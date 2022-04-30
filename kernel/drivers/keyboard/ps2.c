@@ -62,7 +62,6 @@ void ps2_handle_interrupt() {
     if (c != 0) {
         keyboard_push(c); // add to current proc kbd buffer
     }
-
     task_page();
 }
 

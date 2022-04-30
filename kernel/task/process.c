@@ -392,7 +392,7 @@ void process_switch_to_any() {
 
 // remove process from process linked list
 static void process_unlink(struct process* proc) {
-    processes[proc->id] = 0x00;
+    processes[proc->id] = 0;
     if (process_current == proc) {
         process_switch_to_any();
     }

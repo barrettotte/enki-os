@@ -22,7 +22,7 @@ static struct file_system** fs_get_free_file_system() {
 
 // 
 static void file_free_descriptor(struct file_descriptor* desc) {
-    file_descriptors[desc->index-1] = 0x00;
+    file_descriptors[desc->index-1] = 0;
     kfree(desc);
 }
 

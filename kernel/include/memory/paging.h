@@ -14,21 +14,21 @@
 #define PAGING_TOTAL_ENTRIES_PER_TABLE 1024
 #define PAGING_PAGE_SIZE               4096
 
-struct paging_chunk {
-    uint32_t* directory_entry;
+struct paging_page_dir {
+    uint32_t* entries;
 };
 
 // create page directory, mapped linearly
-struct paging_chunk* paging_new(uint8_t flags);
+struct paging_page_dir* paging_new(uint8_t flags);
 
-// free memory used by chunk
-void paging_free(struct paging_chunk* chunk);
+// free memory used by page directory
+void paging_free(struct paging_page_dir* dir);
 
-// access directory of chunk
-uint32_t* paging_get_directory(struct paging_chunk* chunk);
+// access directory of page directory
+uint32_t* paging_get_directory(struct paging_page_dir* dir);
 
 // switch page directory
-void paging_switch(struct paging_chunk* directory);
+void paging_switch(struct paging_page_dir* dir);
 
 // check if address is page-aligned
 bool paging_is_aligned(void* addr);
@@ -46,13 +46,13 @@ void* paging_align_address(void* addr);
 void* paging_align_to_lower(void* addr);
 
 //
-int paging_map(struct paging_chunk* dir, void* virt_addr, void* phys_addr, int flags);
+int paging_map(struct paging_page_dir* dir, void* virt_addr, void* phys_addr, int flags);
 
 //
-int paging_map_range(struct paging_chunk* dir, void* virt_addr, void* phys_addr, int page_count, int flags);
+int paging_map_range(struct paging_page_dir* dir, void* virt_addr, void* phys_addr, int page_count, int flags);
 
 //
-int paging_map_to(struct paging_chunk* dir, void* virt_addr, void* phys_addr, void* phys_end, int flags);
+int paging_map_to(struct paging_page_dir* dir, void* virt_addr, void* phys_addr, void* phys_end, int flags);
 
 // set page table entry at virtual address
 int paging_set(uint32_t* dir, void* virt_addr, uint32_t val);
