@@ -7,7 +7,7 @@ SRC_DIR := .
 
 LIBC_DIR := ../../libc
 LIBC_BIN := $(LIBC_DIR)/bin/libc
-TARGET := $(BIN_DIR)/nothing
+TARGET := $(BIN_DIR)/$(notdir $(CURDIR))
 
 SRC_TYPES   := -type f \( -iname "*.asm" -o -iname "*.c" -o -iname "*.cpp" \)
 SOURCES     := $(shell find $(SRC_DIR)/* $(SRC_TYPES))

@@ -4,7 +4,7 @@ A basic x86 kernel to learn how operating systems get from BIOS to userland.
 
 This is my first dive into the deep world of operating systems. 
 I hope to make another kernel in the future using the things I learned here. 
-This one still needs a lot of care it probably won't get.
+This one still needs a lot of love and care it probably won't get.
 
 Named after [Enki](https://en.wikipedia.org/wiki/Enki), 
 Sumerian god of water, knowledge, crafts, and creation. 
@@ -29,6 +29,7 @@ Sumerian god of water, knowledge, crafts, and creation.
 
 ## TODO Items
 
+- Proper trapping/exception handling
 - Shift key
 - Scrolling terminal
 - Clear terminal

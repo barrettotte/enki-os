@@ -22,6 +22,7 @@ int printf(const char* fmt, ...) {
             continue;
         }
         switch(*++p) {
+            case 'd':
             case 'i':
                 ival = va_arg(ap, int);
                 enki_print(itoa(ival));

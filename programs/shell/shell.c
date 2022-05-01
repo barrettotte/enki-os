@@ -10,14 +10,11 @@ static void cmd_handler(char* in) {
     if (!strncmp("echo", in, 4)) {
         cmd_echo(in);
     } else {
-        struct cmd_arg* cmd = enki_parse_cmd(in, sizeof(in));
-        enki_system_run(cmd->arg);  // otherwise try to run file
+        enki_system_run(in);  // otherwise try to run file
     }
 }
 
-int main(int argcc, char** argv) {
-    enki_print("EnkiOS\n");
-
+int main(int argc, char** argv) {
     while(1) {
         char buf[1024];
         enki_print("> ");

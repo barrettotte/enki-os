@@ -35,18 +35,6 @@ struct elf32_phdr* elf_program_header(struct elf_header* header, int idx);
 // get a particular section header entry
 struct elf32_shdr* elf_section_header(struct elf_header* header, int idx);
 
-// TODO: needed?
-void* elf_virt_base(struct elf_file* file);
-
-// TODO: needed?
-void* elf_virt_end(struct elf_file* file);
-
-// TODO: needed?
-void* elf_phys_base(struct elf_file* file);
-
-// TODO: needed?
-void* elf_phys_end(struct elf_file* file);
-
 // calculate physical address of program header
 void* elf_phdr_phys_addr(struct elf_file* ef, struct elf32_phdr* phdr);
 

@@ -48,8 +48,7 @@ int task_free(struct task* task) {
 // initialize a task
 int task_init(struct task* task, struct process* proc) {
     memset(task, 0, sizeof(struct task));
-    task->page_dir = paging_new(PAGING_IS_PRESENT | PAGING_ACCESS_FROM_ALL); // TODO: insecure
-    
+    task->page_dir = paging_new(PAGING_IS_PRESENT | PAGING_ACCESS_FROM_ALL);
     if (!task->page_dir) {
         return -EIO;
     }

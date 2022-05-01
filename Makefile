@@ -13,7 +13,7 @@ BOOT_BIN   := $(KERNEL_DIR)/bin/boot.bin
 KERNEL_BIN := $(KERNEL_DIR)/bin/kernel.bin
 KERNEL_OBJ := $(KERNEL_DIR)/obj/kernel_full.o
 ENKI_BIN   := $(BIN_DIR)/enki.bin
-PGMS       := shell nothing
+PGMS       := shell repeat hello
 
 KERNEL_ENTRY := 0x100000
 PGM_ENTRY    := 0x400000

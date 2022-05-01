@@ -39,27 +39,20 @@ static void test_multitask() {
     struct cmd_arg arg;
 
     // 1st process
-    if (process_load_switch("0:/nothing", &proc)) {
-        panic("Failed to load file nothing\n");
+    if (process_load_switch("0:/repeat", &proc)) {
+        panic("Failed to load process 'repeat'\n");
     }
     strcpy(arg.arg, "X");
     arg.next = 0;
     process_inject_args(proc, &arg);
 
     // 2nd process
-    if (process_load_switch("0:/nothing", &proc)) {
-        panic("Failed to load file nothing\n");
+    if (process_load_switch("0:/repeat", &proc)) {
+        panic("Failed to load process 'repeat'\n");
     }
     strcpy(arg.arg, "A");
     arg.next = 0;
     process_inject_args(proc, &arg);
-}
-
-static void load_shell() {
-    struct process* proc = 0;
-    if (process_load_switch("0:/shell", &proc)) {
-        panic("Failed to load shell process\n");
-    }
 }
 
 void kernel_page() {
@@ -69,6 +62,7 @@ void kernel_page() {
 
 void kernel_main() {
     tty_init();
+    tty_writestr("Enki OS\n");
 
     // init GDT
     memset(gdt_real, 0x00, sizeof(gdt_real));
@@ -95,6 +89,6 @@ void kernel_main() {
     syscall_register_all();
     keyboard_init();
 
-    load_shell();
+    process_new_shell();
     task_run_first();
 }

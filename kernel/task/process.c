@@ -379,15 +379,23 @@ static int process_free_pgm_data(struct process* proc) {
     return result;
 }
 
-//
-void process_switch_to_any() {
+struct process* process_new_shell() {
+    struct process* proc = 0;
+    if (process_load_switch("0:/shell", &proc)) {
+        panic("Failed to load shell process\n");
+    }
+    return proc;
+}
+
+// switch to an open process or spawn a new shell
+static void process_switch_to_any() {
     for (int i = 0; i < ENKI_MAX_PROCESSES; i++) {
         if (processes[i]) {
             process_switch(processes[i]);
             return;
         }
     }
-    panic("No processes to switch to.\n");  // or respawn a shell
+    process_new_shell();  // no processes, just spawn a new shell
 }
 
 // remove process from process linked list

@@ -98,7 +98,6 @@ void* syscall_6_proc_start(struct interrupt_frame* frame) {
     // start process
     task_switch(proc->task);              // switch to new process's task
     task_return(&proc->task->registers);  // drop into kernel
-
     return 0;
 }
 

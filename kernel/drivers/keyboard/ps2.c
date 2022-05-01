@@ -67,7 +67,8 @@ void ps2_handle_interrupt() {
 
 int ps2_keyboard_init() {
     idt_register_int_callback(ISR_KBD_INTERRUPT, ps2_handle_interrupt);
-    keyboard_set_capslock(&ps2_keyboard, KEYBOARD_CAPSLOCK_OFF);  // TODO: use kbd cmds to determine init state
+    keyboard_set_capslock(&ps2_keyboard, KEYBOARD_CAPSLOCK_OFF);  
+    // TODO: use kbd cmds to determine init state
 
     outb(PS2_CMD_PORT, PS2_CMD_EN_FIRST_PORT);
     return 0;

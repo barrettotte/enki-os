@@ -66,22 +66,6 @@ char* elf_str_table(struct elf_header* header) {
     return (char*) header + elf_section_header(header, header->e_shstrndx)->sh_offset;
 }
 
-void* elf_virt_base(struct elf_file* ef) {
-    return ef->virt_base_addr;
-}
-
-void* elf_virt_end(struct elf_file* ef) {
-    return ef->virt_end_addr;
-}
-
-void* elf_phys_base(struct elf_file* ef) {
-    return ef->phys_base_addr;
-}
-
-void* elf_phys_end(struct elf_file* ef) {
-    return ef->phys_end_addr;
-}
-
 void* elf_phdr_phys_addr(struct elf_file* ef, struct elf32_phdr* phdr) {
     return elf_memory(ef) + phdr->p_offset;
 }

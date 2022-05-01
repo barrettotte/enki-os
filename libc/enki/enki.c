@@ -62,9 +62,9 @@ void enki_tty_readline(char* out, int max, bool show_typing) {
         if (key == 0x08 && i >= 1) {
             out[i - 1] = 0x00;
             i -= 2;
-            continue;  // TODO: could probably do else and i--
+        } else {
+            out[i] = key;
         }
-        out[i] = key;
     }
     out[i] = 0x00;
 }

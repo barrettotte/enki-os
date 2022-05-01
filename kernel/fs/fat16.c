@@ -2,6 +2,7 @@
 #include <disk/disk_stream.h>
 #include <fs/fat16.h>
 #include <kernel/config.h>
+#include <kernel/panic.h>
 #include <kernel/status.h>
 #include <memory/kheap.h>
 #include <stdint.h>
@@ -387,7 +388,7 @@ void fat16_fat_item_free(struct fat_item* item) {
     } else if (item->type == FAT_ITEM_TYPE_FILE) {
         kfree(item->item);
     } else {
-        // TODO: panic!
+        panic("fat16_fat_item_free(): Invalid FAT item type.\n");
     }
     kfree(item);
 }

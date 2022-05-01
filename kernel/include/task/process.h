@@ -81,6 +81,9 @@ void process_get_args(struct process* proc, int* argc, char*** argv);
 // inject command arguments into process
 int process_inject_args(struct process* proc, struct cmd_arg* root_arg);
 
+// load another shell instance
+struct process* process_new_shell();
+
 // terminate a given process and free its memory
 int process_terminate(struct process* proc);
 
