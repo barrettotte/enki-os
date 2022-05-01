@@ -38,9 +38,14 @@ Sumerian god of water, knowledge, crafts, and creation.
 - Clear terminal
 - Init Floating Point Unit (FPU)
 - Reboot command
+- ACPI
+- PC speaker support
+- Terminal color support
+- Abstraction over PIC
+- Abstraction over timer
 - Gather system info and print on startup (memory, timer, etc)
 - Stack smash protector
-- Multiboot
+- Multiboot header
 - Dockerfile with toolchain installed? Github action?
 
 ## Limitations
@@ -53,6 +58,7 @@ Sumerian god of water, knowledge, crafts, and creation.
 - Only supports loading static ELF files
 - Simple multitasking via timer
 - Limited process control (no fork or exec)
+- No threading
 - Probably a lot more I'm forgetting...
 
 ## References
