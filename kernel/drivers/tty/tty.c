@@ -1,3 +1,4 @@
+#include <drivers/cursor.h>
 #include <drivers/tty.h>
 #include <stdbool.h>
 #include <stddef.h>
@@ -73,6 +74,8 @@ void tty_writechar(char c, char color) {
     if (tty_row >= VGA_HEIGHT) {
         // TODO: scroll
     }
+
+    // update cursor?
 }
 
 void tty_writestr(const char *s) {

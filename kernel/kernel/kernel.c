@@ -1,5 +1,6 @@
 #include <disk/disk.h>
 #include <disk/disk_stream.h>
+#include <drivers/cursor.h>
 #include <drivers/keyboard.h>
 #include <drivers/tty.h>
 #include <fs/file.h>
@@ -62,7 +63,8 @@ void kernel_page() {
 
 void kernel_main() {
     tty_init();
-    tty_writestr("Enki OS\n");
+    cursor_disable(); // no cursor support...yet
+    tty_writestr("Enki OS\n\n");
 
     // init GDT
     memset(gdt_real, 0x00, sizeof(gdt_real));

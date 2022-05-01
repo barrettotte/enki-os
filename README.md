@@ -20,6 +20,8 @@ Sumerian god of water, knowledge, crafts, and creation.
 - [x] Userland with basic shell
 - [x] Basic Multitasking (timer based)
 
+![docs/enki-test.png](docs/enki-test.png)
+
 ## Building Locally
 
 - Install dependencies and build cross compiler: `make toolchain`
@@ -32,6 +34,7 @@ Sumerian god of water, knowledge, crafts, and creation.
 - Proper trapping/exception handling
 - Shift key
 - Scrolling terminal
+- Cursor support
 - Clear terminal
 - Init Floating Point Unit (FPU)
 - Reboot command

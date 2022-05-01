@@ -145,7 +145,7 @@ void* syscall_9_exit(struct interrupt_frame* frame) {
     struct process* proc = task_get_current()->process;
     process_terminate(proc);
     task_switch_next();
-    // TODO: proc exit code
+    // TODO: check proc exit code
     return 0;
 }
 
